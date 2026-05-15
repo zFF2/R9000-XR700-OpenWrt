@@ -81,7 +81,7 @@ endef
 
 DEVICE_VARS += SIGNATURE MAGIC CRC32_POLY LOADER_FLASH_OFFS
 
-DTS_DIR := $(DTS_DIR)/lantiq
+DTS_DIR := ../dts
 
 # Shared device definition: applies to every defined device
 define Device/Default
@@ -160,6 +160,12 @@ endif
 ifeq ($(SUBTARGET),xway)
 include danube.mk
 include ar9.mk
+endif
+
+ifeq ($(SUBTARGET),xrx200_legacy)
+DEFAULT_SOC := vr9
+include tp-link_legacy.mk
+include vr9_legacy.mk
 endif
 
 ifeq ($(SUBTARGET),xrx200)

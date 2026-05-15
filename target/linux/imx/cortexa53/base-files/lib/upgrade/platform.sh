@@ -1,6 +1,7 @@
 
 enable_image_metadata_check() {
 	case "$(board_name)" in
+	gateworks,imx8m*|\
 	gw,imx8m*)
 		REQUIRE_IMAGE_METADATA=1
 		;;
@@ -12,6 +13,7 @@ platform_check_image() {
 	local board=$(board_name)
 
 	case "$board" in
+	gateworks,imx8m*|\
 	gw,imx8m*)
 		return 0
 		;;
@@ -25,6 +27,7 @@ platform_do_upgrade() {
 	local board=$(board_name)
 
 	case "$board" in
+	gateworks,imx8m*|\
 	gw,imx8m*)
 		export_bootdevice && export_partdevice diskdev 0 || {
 			echo "Unable to find root device."
@@ -41,6 +44,7 @@ platform_copy_config() {
 	local partdev
 
 	case "$board" in
+	gateworks,imx8m*|\
 	gw,imx8m*)
 		export_partdevice partdev 1 && {
 			v "Storing $UPGRADE_BACKUP on /dev/$partdev..."

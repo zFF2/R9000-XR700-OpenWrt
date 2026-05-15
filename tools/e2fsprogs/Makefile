@@ -9,10 +9,10 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=e2fsprogs
 PKG_CPE_ID:=cpe:/a:e2fsprogs_project:e2fsprogs
-PKG_VERSION:=1.47.0
-PKG_HASH:=0b4fe723d779b0927fb83c9ae709bc7b40f66d7df36433bef143e41c54257084
+PKG_VERSION:=1.47.4
+PKG_HASH:=fd5bf388cbdbe006a3d3b318d983b2948382440acc85a87f1e7d108653e8db0b
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=@KERNEL/linux/kernel/people/tytso/e2fsprogs/v$(PKG_VERSION)/
 
 HOST_BUILD_PARALLEL:=1
@@ -31,7 +31,8 @@ HOST_CONFIGURE_ARGS += \
 	--disable-nls \
 	--enable-threads=pth \
 	--disable-fuse2fs \
-	--with-crond-dir=no
+	--with-crond-dir=no \
+	--enable-libblkid
 
 # The following uses pkg-config the wrong way around. Just override it.
 HOST_CONFIGURE_VARS += \

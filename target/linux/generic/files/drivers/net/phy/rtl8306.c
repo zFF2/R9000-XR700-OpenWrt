@@ -587,7 +587,7 @@ rtl_attr_get_port_int(struct switch_dev *dev, const struct switch_attr *attr, st
 	return rtl_attr_get_int(dev, attr, val);
 }
 
-static int 
+static int
 rtl_get_port_link(struct switch_dev *dev, int port, struct switch_port_link *link)
 {
 	if (port >= RTL8306_NUM_PORTS)
@@ -1047,14 +1047,14 @@ static struct phy_driver rtl8306_driver = {
 static int __init
 rtl_init(void)
 {
-	phy_register_fixup_for_id(PHY_ANY_ID, rtl8306_fixup);
-	return phy_driver_register(&rtl8306_driver, THIS_MODULE);
+	phy_register_fixup_for_id("MATCH ANY PHY", rtl8306_fixup);
+	return phy_drivers_register(&rtl8306_driver, 1, THIS_MODULE);
 }
 
 static void __exit
 rtl_exit(void)
 {
-	phy_driver_unregister(&rtl8306_driver);
+	phy_drivers_unregister(&rtl8306_driver, 1);
 }
 
 module_init(rtl_init);

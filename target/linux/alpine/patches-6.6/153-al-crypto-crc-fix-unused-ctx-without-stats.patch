@@ -1,0 +1,18 @@
+--- a/drivers/crypto/al/al_crypto_crc.c
++++ b/drivers/crypto/al/al_crypto_crc.c
+@@ -147,11 +147,15 @@
+  *****************************************************************************/
+ static void al_crc_cra_exit(struct crypto_tfm *tfm)
+ {
++#ifdef CONFIG_CRYPTO_DEV_AL_CRYPTO_STATS
+ 	struct al_crc_ctx *ctx = crypto_tfm_ctx(tfm);
+ 
+ 	AL_CRYPTO_STATS_LOCK(&ctx->chan->stats_gen_lock);
+ 	AL_CRYPTO_STATS_DEC(ctx->chan->stats_gen.crc_tfms, 1);
+ 	AL_CRYPTO_STATS_UNLOCK(&ctx->chan->stats_gen_lock);
++#else
++	(void)tfm;
++#endif
+ 
+ 	return;
+ }

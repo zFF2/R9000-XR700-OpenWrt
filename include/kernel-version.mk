@@ -6,17 +6,28 @@ ifdef CONFIG_TESTING_KERNEL
   KERNEL_PATCHVER:=$(KERNEL_TESTING_PATCHVER)
 endif
 
-KERNEL_DETAILS_FILE=$(INCLUDE_DIR)/kernel-$(KERNEL_PATCHVER)
+ifeq ($(strip $(KERNEL_PATCHVER)),)
+  $(error KERNEL_PATCHVER is empty. Ensure the target/subtarget configuration is loaded before including kernel-version.mk)
+endif
+
+KERNEL_DETAILS_FILE=$(GENERIC_PLATFORM_DIR)/kernel-$(KERNEL_PATCHVER)
 ifeq ($(wildcard $(KERNEL_DETAILS_FILE)),)
-  $(error Missing kernel version/hash file for $(KERNEL_PATCHVER). Please create $(KERNEL_DETAILS_FILE))
+  # Compatibility: older trees keep kernel-* metadata under include/
+  KERNEL_DETAILS_FILE=$(INCLUDE_DIR)/kernel-$(KERNEL_PATCHVER)
+endif
+ifeq ($(wildcard $(KERNEL_DETAILS_FILE)),)
+  $(error Missing kernel version/hash file for $(KERNEL_PATCHVER). Checked $(GENERIC_PLATFORM_DIR) and $(INCLUDE_DIR))
 endif
 
 include $(KERNEL_DETAILS_FILE)
 
 ifdef KERNEL_TESTING_PATCHVER
-  KERNEL_TESTING_DETAILS_FILE=$(INCLUDE_DIR)/kernel-$(KERNEL_TESTING_PATCHVER)
+  KERNEL_TESTING_DETAILS_FILE=$(GENERIC_PLATFORM_DIR)/kernel-$(KERNEL_TESTING_PATCHVER)
   ifeq ($(wildcard $(KERNEL_TESTING_DETAILS_FILE)),)
-    $(error Missing kernel version/hash file for $(KERNEL_TESTING_PATCHVER). Please create $(KERNEL_TESTING_DETAILS_FILE))
+    KERNEL_TESTING_DETAILS_FILE=$(INCLUDE_DIR)/kernel-$(KERNEL_TESTING_PATCHVER)
+  endif
+  ifeq ($(wildcard $(KERNEL_TESTING_DETAILS_FILE)),)
+    $(error Missing kernel version/hash file for $(KERNEL_TESTING_PATCHVER). Checked $(GENERIC_PLATFORM_DIR) and $(INCLUDE_DIR))
   endif
 
   include $(KERNEL_TESTING_DETAILS_FILE)

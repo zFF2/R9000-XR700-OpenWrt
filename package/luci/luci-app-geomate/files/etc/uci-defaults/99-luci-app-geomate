@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# Ensure rpcd/uhttpd pick up LuCI menu ACL and RPC method changes
+# on first boot when package postinst scripts were skipped during image build.
+[ -x /etc/init.d/rpcd ] && /etc/init.d/rpcd restart >/dev/null 2>&1
+[ -x /etc/init.d/uhttpd ] && /etc/init.d/uhttpd restart >/dev/null 2>&1
+
+exit 0

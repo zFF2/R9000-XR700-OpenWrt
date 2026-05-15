@@ -1,0 +1,32 @@
+--- a/configure.ac
++++ b/configure.ac
+@@ -398,10 +398,14 @@
+         if test "x$HAVE_SSL" != "xyes"; then
+             AC_MSG_ERROR([SHA2 enabled, but no SSL support])
+         fi
+-	AC_MSG_CHECKING(for SHA256 and SHA512)
+-	AC_CHECK_FUNC(SHA256_Init, [], [
+-		AC_MSG_ERROR([No SHA2 functions found in OpenSSL: please upgrade OpenSSL or rerun with --disable-sha2])
+-		])
++	AC_MSG_CHECKING([for SHA256 and SHA512 EVP functions])
++	if test "x$ac_cv_func_EVP_sha256" != "xyes" -o \
++	        "x$ac_cv_func_EVP_sha512" != "xyes"; then
++		AC_MSG_RESULT([no])
++		AC_MSG_ERROR([No SHA2 EVP functions found in OpenSSL: rerun with --disable-sha2])
++	else
++		AC_MSG_RESULT([yes])
++	fi
+ 	AC_DEFINE_UNQUOTED([USE_SHA2], [1], [Define this to enable SHA256 and SHA512 support.])
+         ;;
+ esac
+@@ -553,8 +557,8 @@
+       if test "x$HAVE_SSL" != "xyes"; then
+         AC_MSG_ERROR([ECDSA enabled, but no SSL support])
+       fi
+-      AC_CHECK_FUNC(ECDSA_sign, [], [AC_MSG_ERROR([OpenSSL does not support ECDSA: please upgrade OpenSSL or rerun with --disable-ecdsa])])
+-      AC_CHECK_FUNC(SHA384_Init, [], [AC_MSG_ERROR([OpenSSL does not support SHA384: please upgrade OpenSSL or rerun with --disable-ecdsa])])
++      AC_CHECK_FUNC(EC_KEY_new_by_curve_name, [], [AC_MSG_ERROR([OpenSSL does not provide EC key APIs: rerun with --disable-ecdsa])])
++      AC_CHECK_FUNC(EVP_sha384, [], [AC_MSG_ERROR([OpenSSL does not support SHA384 EVP: rerun with --disable-ecdsa])])
+       AC_CHECK_DECLS([NID_X9_62_prime256v1, NID_secp384r1], [], [AC_MSG_ERROR([OpenSSL does not support the ECDSA curves: please upgrade OpenSSL or rerun with --disable-ecdsa])], [AC_INCLUDES_DEFAULT
+ #include <openssl/evp.h>
+       ])

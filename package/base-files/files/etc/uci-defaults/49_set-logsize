@@ -1,0 +1,1 @@
+uci set system.@system[0].log_size='128'; uci commit system; /etc/init.d/log restart;

@@ -8,6 +8,10 @@ config MBEDTLS_AES_C
 	bool "MBEDTLS_AES_C"
 	default y
 
+config MBEDTLS_ARIA_C
+	bool "MBEDTLS_ARIA_C"
+	default n
+
 config MBEDTLS_CAMELLIA_C
 	bool "MBEDTLS_CAMELLIA_C"
 	default n
@@ -78,6 +82,10 @@ config MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED
 
 config MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED
 	bool "MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED"
+	default n
+
+config MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED
+	bool "MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED"
 	default n
 
 comment "Curves - unselect old or less-used curves to reduce binary size"

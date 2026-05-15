@@ -1,0 +1,30 @@
+--- a/src/smartdns.c	2026-04-14 13:30:37.295275330 +0300
++++ b/src/smartdns.c	2026-04-14 13:40:20.479263548 +0300
+@@ -402,23 +402,13 @@
+ 
+ static int _smartdns_init_ssl(void)
+ {
+-#if OPENSSL_API_COMPAT < 0x10100000L
+-	SSL_load_error_strings();
+-	SSL_library_init();
+-	OpenSSL_add_all_algorithms();
+-	SSL_CRYPTO_thread_setup();
+-#endif
+-	return 0;
++    /* OpenSSL 1.1+ / 3 initializes automatically */
++    return 0;
+ }
+ 
+-static int _smartdns_destroy_ssl(void)
++static void _smartdns_destroy_ssl(void)
+ {
+-#if OPENSSL_API_COMPAT < 0x10100000L
+-	SSL_CRYPTO_thread_cleanup();
+-	ERR_free_strings();
+-	EVP_cleanup();
+-#endif
+-	return 0;
++    /* nothing needed in modern OpenSSL */
+ }
+ 
+ static const char *_smartdns_log_path(void)

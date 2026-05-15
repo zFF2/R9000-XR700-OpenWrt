@@ -101,7 +101,14 @@
 }
 #else
 #define AL_DMA_STATS_INC(var, incval)
-#define AL_DMA_STATS_UPDATE(chan, num, cnt, size, size_inc)
+#define AL_DMA_STATS_UPDATE(chan, num, cnt, size, size_inc)	\
+do {								\
+	(void)(chan);						\
+	(void)(num);						\
+	(void)(cnt);						\
+	(void)(size);						\
+	(void)(size_inc);					\
+} while (0)
 #endif
 
 enum al_unmap_type {
@@ -404,4 +411,3 @@ extern struct al_dma_sysfs_entry al_dma_version_attr;
 extern struct al_dma_sysfs_entry al_dma_cap_attr;
 
 #endif /* AL_DMA_H */
-

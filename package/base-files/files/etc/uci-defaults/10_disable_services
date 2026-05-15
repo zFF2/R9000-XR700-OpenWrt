@@ -1,0 +1,3 @@
+service sqm-autorate disable
+service sqm-autorate stop
+exit 0

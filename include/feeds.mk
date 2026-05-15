@@ -7,6 +7,10 @@
 
 FEEDS_INSTALLED:=$(notdir $(wildcard $(TOPDIR)/package/feeds/*))
 FEEDS_AVAILABLE:=$(sort $(FEEDS_INSTALLED) $(shell $(SCRIPT_DIR)/feeds list -n 2>/dev/null))
+# Distfeeds under VERSION_REPO only exist for OpenWrt's canonical feed namespaces.
+# Keep custom/community feeds out of distfeeds and let them manage customfeeds instead.
+DISTFEEDS_NAMESPACES:=packages luci routing telephony
+FEEDS_DISTAVAILABLE:=$(filter $(DISTFEEDS_NAMESPACES),$(FEEDS_AVAILABLE))
 
 PACKAGE_SUBDIRS=$(PACKAGE_DIR)
 ifneq ($(CONFIG_PER_FEED_REPO),)
@@ -20,7 +24,7 @@ opkg_package_files = $(wildcard \
 
 apk_package_files = $(wildcard \
 	$(foreach dir,$(PACKAGE_SUBDIRS), \
-	  $(foreach pkg,$(1), $(dir)/$(pkg)_*.apk)))
+	  $(foreach pkg,$(1), $(dir)/$(pkg)-*.apk)))
 
 # 1: package name
 define FeedPackageDir
@@ -34,28 +38,30 @@ endef
 # 1: destination file
 define FeedSourcesAppendOPKG
 ( \
-  echo 'src/gz %d_core %U/targets/%S/packages'; \
   $(strip $(if $(CONFIG_PER_FEED_REPO), \
 	echo 'src/gz %d_base %U/packages/%A/base'; \
 	$(if $(CONFIG_BUILDBOT), \
 		echo 'src/gz %d_kmods %U/targets/%S/kmods/$(LINUX_VERSION)-$(LINUX_RELEASE)-$(LINUX_VERMAGIC)';) \
-	$(foreach feed,$(FEEDS_AVAILABLE), \
+	$(foreach feed,$(FEEDS_DISTAVAILABLE), \
 		$(if $(CONFIG_FEED_$(feed)), \
-			echo '$(if $(filter m,$(CONFIG_FEED_$(feed))),# )src/gz %d_$(feed) %U/packages/%A/$(feed)';)))) \
+			echo '$(if $(filter m,$(CONFIG_FEED_$(feed))),# )src/gz %d_$(feed) %U/packages/%A/$(feed)';)), \
+	echo 'src/gz %d_core %U/targets/%S/packages';)) \
 ) >> $(1)
 endef
 
 # 1: destination file
 define FeedSourcesAppendAPK
 ( \
-  echo '%U/targets/%S/packages/packages.adb'; \
+  echo '# This file is auto-generated and build-specific, any changes will be intentionally lost in sysupgrade.'; \
+  echo '# Add your custom feeds to /etc/apk/repositories.d/customfeeds.list'; \
   $(strip $(if $(CONFIG_PER_FEED_REPO), \
 	echo '%U/packages/%A/base/packages.adb'; \
 	$(if $(CONFIG_BUILDBOT), \
 		echo '%U/targets/%S/kmods/$(LINUX_VERSION)-$(LINUX_RELEASE)-$(LINUX_VERMAGIC)/packages.adb';) \
-	$(foreach feed,$(FEEDS_AVAILABLE), \
+	$(foreach feed,$(FEEDS_DISTAVAILABLE), \
 		$(if $(CONFIG_FEED_$(feed)), \
-			echo '$(if $(filter m,$(CONFIG_FEED_$(feed))),# )%U/packages/%A/$(feed)/packages.adb';)))) \
+			echo '$(if $(filter m,$(CONFIG_FEED_$(feed))),# )%U/packages/%A/$(feed)/packages.adb';)), \
+	echo '%U/targets/%S/packages/packages.adb';)) \
 ) >> $(1)
 endef
 

@@ -12,9 +12,9 @@ PKG_RELEASE:=1
 
 PKG_SOURCE_URL=$(PROJECT_GIT)/project/mdnsd.git
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_DATE:=2024-09-17
-PKG_SOURCE_VERSION:=fbaca4b6f530d4b2f361ee15c266aa19a708242b
-PKG_MIRROR_HASH:=e3fc47a019ea54722b8d7dfc8158307a9fb4a9d18945a1a6794616e3b80d5d3b
+PKG_SOURCE_DATE:=2026-02-06
+PKG_SOURCE_VERSION:=a52cdb354d13c179150d2ba26f9f8a51d418b43d
+PKG_MIRROR_HASH:=64d6b454aefd208881a130ec0d503e690375565ed3de0171a8c70f5d1a4a25bf
 
 PKG_MAINTAINER:=John Crispin <john@phrozen.org>
 PKG_LICENSE:=LGPL-2.1
@@ -37,7 +37,12 @@ define Package/umdns/conffiles
 endef
 
 define Package/umdns/install
-	$(INSTALL_DIR) $(1)/usr/sbin $(1)/etc/init.d $(1)/etc/config
+	$(INSTALL_DIR) \
+		$(1)/usr/sbin \
+		$(1)/etc/init.d \
+		$(1)/etc/config \
+		$(1)/usr/share/ucode/cli/modules
+	$(INSTALL_DATA) ./files/mdns.uc $(1)/usr/share/ucode/cli/modules
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/umdns $(1)/usr/sbin/
 	$(INSTALL_BIN) ./files/umdns.init $(1)/etc/init.d/umdns
 	$(INSTALL_CONF) ./files/umdns.config $(1)/etc/config/umdns

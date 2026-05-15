@@ -17,8 +17,8 @@
 #include <linux/kernel.h>
 #include <linux/types.h>
 #include <linux/platform_device.h>
-#include <linux/of_device.h>
 #include <linux/of_irq.h>
+#include <linux/of_platform.h>
 
 #include <ralink_regs.h>
 
@@ -203,19 +203,20 @@ MODULE_DEVICE_TABLE(of, mediatek_gsw_match);
 int mtk_gsw_init(struct fe_priv *priv)
 {
 	struct device_node *eth_node = priv->dev->of_node;
-	struct device_node *phy_node, *mdiobus_node;
+	struct device_node *mdiobus_node;
 	struct device_node *np = priv->switch_np;
-	struct platform_device *pdev = of_find_device_by_node(np);
+	struct platform_device *pdev;
 	struct mt7620_gsw *gsw;
 	const __be32 *id;
 	int ret;
 	u8 val;
 
-	if (!pdev)
-		return -ENODEV;
-
 	if (!of_device_is_compatible(np, mediatek_gsw_match->compatible))
 		return -EINVAL;
+
+	pdev = of_find_device_by_node(np);
+	if (!pdev)
+		return -ENODEV;
 
 	gsw = platform_get_drvdata(pdev);
 	priv->soc->swpriv = gsw;
@@ -224,7 +225,7 @@ int mtk_gsw_init(struct fe_priv *priv)
 
 	mdiobus_node = of_get_child_by_name(eth_node, "mdio-bus");
 	if (mdiobus_node) {
-		for_each_child_of_node(mdiobus_node, phy_node) {
+		for_each_child_of_node_scoped(mdiobus_node, phy_node) {
 			id = of_get_property(phy_node, "reg", NULL);
 			if (id && (be32_to_cpu(*id) == 0x1f))
 				gsw->ephy_disable = true;
@@ -248,12 +249,14 @@ int mtk_gsw_init(struct fe_priv *priv)
 		ret = devm_request_irq(&pdev->dev, gsw->irq, gsw_interrupt_mt7620, 0,
 				  "gsw", priv);
 		if (ret) {
+			put_device(&pdev->dev);
 			dev_err(&pdev->dev, "Failed to request irq");
 			return ret;
 		}
 		mtk_switch_w32(gsw, ~PORT_IRQ_ST_CHG, GSW_REG_IMR);
 	}
 
+	put_device(&pdev->dev);
 	return 0;
 }
 
@@ -284,11 +287,9 @@ static int mt7620_gsw_probe(struct platform_device *pdev)
 	return 0;
 }
 
-static int mt7620_gsw_remove(struct platform_device *pdev)
+static void mt7620_gsw_remove(struct platform_device *pdev)
 {
 	platform_set_drvdata(pdev, NULL);
-
-	return 0;
 }
 
 static struct platform_driver gsw_driver = {
