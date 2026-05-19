@@ -10,6 +10,8 @@ curdir:=package
 include $(INCLUDE_DIR)/feeds.mk
 include $(INCLUDE_DIR)/rootfs.mk
 
+DISABLED_SERVICES += geomate
+
 -include $(TMP_DIR)/.packagedeps
 package-y += kernel/linux
 $(curdir)/autoremove:=1
@@ -123,7 +125,7 @@ endif
 
 	$(CP) $(TARGET_DIR) $(TARGET_DIR_ORIG)
 
-	$(call prepare_rootfs,$(TARGET_DIR),$(TOPDIR)/files)
+	$(call prepare_rootfs,$(TARGET_DIR),$(TOPDIR)/files,$(DISABLED_SERVICES))
 
 $(curdir)/index: FORCE
 	@echo Generating package index...

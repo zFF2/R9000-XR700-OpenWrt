@@ -1,0 +1,31 @@
+#!/bin/sh
+if [ $(smartdns.@server[].enabled) ]; then
+    exit 0                           
+else               
+uci add smartdns server
+uci set smartdns.@server[-1].enabled='1'
+uci set smartdns.@server[-1].name='google'
+uci set smartdns.@server[-1].ip='8.8.8.8'
+uci set smartdns.@server[-1].type='udp'
+uci set smartdns.@server[-1].fallback='0'
+uci add smartdns server
+uci set smartdns.@server[-1].enabled='1'                                                
+uci set smartdns.@server[-1].name='cloudflare'
+uci set smartdns.@server[-1].ip='1.1.1.1'
+uci set smartdns.@server[-1].type='udp'
+uci set smartdns.@server[-1].fallback='0'
+uci add smartdns server
+uci set smartdns.@server[-1].enabled='1'
+uci set smartdns.@server[-1].name='google(tcp)'
+uci set smartdns.@server[-1].ip='8.8.8.8'
+uci set smartdns.@server[-1].type='tcp'
+uci set smartdns.@server[-1].fallback='1'
+uci add smartdns server
+uci set smartdns.@server[-1].enabled='1'
+uci set smartdns.@server[-1].name='cloudflare(tcp)'
+uci set smartdns.@server[-1].ip='1.1.1.1'
+uci set smartdns.@server[-1].type='tcp'
+uci set smartdns.@server[-1].fallback='1'
+uci commit smartdns
+fi
+exit 0

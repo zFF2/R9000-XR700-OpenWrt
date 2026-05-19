@@ -1,0 +1,18 @@
+--- a/root/etc/config/firewall
++++ b/root/etc/config/firewall
+@@ -1,5 +1,5 @@
+ config defaults
+-	option syn_flood	1
++	option synflood_protect	1
+ 	option input		REJECT
+ 	option output		ACCEPT
+ 	option forward		REJECT
+@@ -19,7 +19,7 @@ config zone
+ 	list   network		'wan6'
+ 	option input		REJECT
+ 	option output		ACCEPT
+-	option forward		DROP
++	option forward		REJECT
+ 	option masq		1
+ 	option mtu_fix		1
+ 

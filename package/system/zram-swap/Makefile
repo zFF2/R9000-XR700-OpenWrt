@@ -42,7 +42,9 @@ endef
 
 define Package/zram-swap/install
 	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) ./files/zram.init $(1)/etc/init.d/zram
+	$(INSTALL_BIN) .${PKG_INSTROOT}/files/zram.init $(1)/etc/init.d/zram
+	$(INSTALL_DIR) $(1)/etc/uci-defaults/
+	$(INSTALL_BIN) .${PKG_INSTROOT}/files/97-zram $(1)/etc/uci-defaults/97-zram
 endef
 
 $(eval $(call BuildPackage,zram-swap))

@@ -1,55 +1,20 @@
-#
-# Copyright (C) 2019-2021 CZ.NIC, z. s. p. o. (https://www.nic.cz/)
-#
-# This is free software, licensed under the GNU General Public License v2.
-# See /LICENSE for more information.
-#
-
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=python-more-itertools
-PKG_VERSION:=8.7.0
+PYPI_NAME:=more-itertools
+PKG_VERSION:=11.0.2
 PKG_RELEASE:=1
 
-PYPI_NAME:=more-itertools
-PKG_HASH:=c5d6da9ca3ff65220c3bfd2a8db06d698f05d4d2b9be57e1deb2be5a45019713
+PKG_URL:=https://github.com/erikrose/more-itertools
+PKG_TITLE:=More routines for operating on iterables, beyond itertools
+PKG_HASH:=392a9e1e362cbc106a2457d37cabf9b36e5e12efd4ebff1654630e76597df804
+PKG_DEPENDS:=+python3-light
 
 PKG_MAINTAINER:=Jan Pavlinec <jan.pavlinec1@gmail.com>
 PKG_LICENSE:=MIT
 PKG_LICENSE_FILES:=LICENSE
 
-include $(TOPDIR)/feeds/packages/lang/python/pypi.mk
-include $(INCLUDE_DIR)/package.mk
-include $(TOPDIR)/feeds/packages/lang/python/python3-package.mk
+include $(TOPDIR)/package/lang/python/oldpythonfix.mk
 
-define Package/python3-more-itertools
-  SUBMENU:=Python
-  SECTION:=lang
-  CATEGORY:=Languages
-  TITLE:=More routines for operating on iterables, beyond itertools
-  URL:=https://github.com/erikrose/more-itertools
-  DEPENDS:=+python3-light
-endef
-
-define Package/python3-more-itertools/description
-  more-itertools library collects additional building blocks,
-  recipes, and routines for working with Python iterables.
-endef
-
-define Package/python3-more-itertools-src
-  SUBMENU:=Python
-  SECTION:=lang
-  CATEGORY:=Languages
-  TITLE:=More routines for operating on iterables, beyond itertools (source code)
-  URL:=https://github.com/erikrose/more-itertools
-  DEPENDS:=+python3-more-itertools
-endef
-
-define Package/python3-more-itertools-src/description
-  more-itertools library collects additional building blocks,
-  recipes, and routines for working with Python iterables.
-endef
-
-$(eval $(call Py3Package,python3-more-itertools))
-$(eval $(call BuildPackage,python3-more-itertools))
-$(eval $(call BuildPackage,python3-more-itertools-src))
+$(eval $(call Py3Package,$(PKG_NAME)))
+$(eval $(call BuildPackage,$(PKG_NAME)))
+$(eval $(call BuildPackage,$(PKG_NAME)-src))

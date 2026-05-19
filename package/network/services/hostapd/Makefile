@@ -91,9 +91,8 @@ endif
 
 CORE_DEPENDS = +ucode +libucode \
 	+ucode-mod-fs +ucode-mod-nl80211 +ucode-mod-rtnl +ucode-mod-ubus +ucode-mod-uloop \
-	+libubus +libblobmsg-json \
-	+libudebug
-OPENSSL_DEPENDS = +PACKAGE_$(1):libopenssl +PACKAGE_$(1):libopenssl-legacy
+	+libubus +libblobmsg-json +libudebug
+OPENSSL_DEPENDS = +PACKAGE_$(1):libopenssl
 
 DRIVER_MAKEOPTS= \
 	CONFIG_ACS=y CONFIG_DRIVER_NL80211=y \

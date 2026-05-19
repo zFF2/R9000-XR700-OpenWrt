@@ -459,12 +459,13 @@ static int gpio_keys_button_probe(struct platform_device *pdev,
 		return -EINVAL;
 	}
 
-	buttons = devm_kmemdup_array(dev, pdata->buttons, pdata->nbuttons, sizeof(struct gpio_keys_button),
+	buttons = devm_kmalloc_array(dev, pdata->nbuttons, sizeof(*buttons),
 		       GFP_KERNEL);
 	if (!buttons) {
 		dev_err(dev, "no memory for button data\n");
 		return -ENOMEM;
 	}
+	memcpy(buttons, pdata->buttons, pdata->nbuttons * sizeof(*buttons));
 
 	bdev = devm_kzalloc(dev, struct_size(bdev, data, pdata->nbuttons), GFP_KERNEL);
 	if (!bdev) {
@@ -681,7 +682,7 @@ static void gpio_keys_remove(struct platform_device *pdev)
 
 static struct platform_driver gpio_keys_driver = {
 	.probe	= gpio_keys_probe,
-	.remove = gpio_keys_remove,
+	.remove_new = gpio_keys_remove,
 	.driver	= {
 		.name	= "gpio-keys",
 		.of_match_table = of_match_ptr(gpio_keys_of_match),
@@ -690,7 +691,7 @@ static struct platform_driver gpio_keys_driver = {
 
 static struct platform_driver gpio_keys_polled_driver = {
 	.probe	= gpio_keys_polled_probe,
-	.remove = gpio_keys_remove,
+	.remove_new = gpio_keys_remove,
 	.driver	= {
 		.name	= "gpio-keys-polled",
 		.of_match_table = of_match_ptr(gpio_keys_polled_of_match),

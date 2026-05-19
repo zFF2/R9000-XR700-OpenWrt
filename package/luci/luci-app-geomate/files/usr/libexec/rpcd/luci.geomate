@@ -21,6 +21,10 @@ local function shell_read(cmd)
     return out
 end
 
+local function shell_quote(value)
+    return "'" .. tostring(value):gsub("'", "'\\''") .. "'"
+end
+
 local function read_init_version()
     local f = io.open("/etc/init.d/geomate", "r")
     if not f then
@@ -39,22 +43,73 @@ local function read_init_version()
     return nil
 end
 
+local function read_apk_db_version(pkg)
+    local db = io.open("/lib/apk/db/installed", "r")
+    if not db then
+        return nil
+    end
+
+    local matched = false
+    for line in db:lines() do
+        if line == "" then
+            matched = false
+        elseif line == "P:" .. pkg then
+            matched = true
+        elseif matched then
+            local version = line:match("^V:(.+)")
+            if version and version ~= "" then
+                db:close()
+                return version
+            end
+        end
+    end
+
+    db:close()
+    return nil
+end
+
+local function nft_available()
+    return nixio.fs.access("/usr/sbin/nft") or nixio.fs.access("/sbin/nft") or nixio.fs.access("/bin/nft") or nixio.fs.access("/usr/bin/nft")
+end
+
 local function get_installed_pkg_version(pkg)
     if not pkg or pkg == "" then
         return nil
     end
 
+    local quoted_pkg = shell_quote(pkg)
+
     -- Prefer apk on modern OpenWrt builds.
-    if nixio.fs.access("/sbin/apk") or nixio.fs.access("/bin/apk") then
-        local line = shell_read("apk info -v " .. pkg .. " 2>/dev/null | head -n1")
-        if line and line:sub(1, #pkg + 1) == (pkg .. "-") then
-            return line:sub(#pkg + 2)
+    if nixio.fs.access("/sbin/apk") or nixio.fs.access("/bin/apk") or nixio.fs.access("/usr/bin/apk") then
+        local line = shell_read("apk list --manifest --installed " .. quoted_pkg .. " 2>/dev/null | head -n1")
+        if line then
+            local name, version = line:match("^(%S+)%s+(%S+)")
+            if name == pkg and version and version ~= "" then
+                return version
+            end
+        end
+
+        line = shell_read("apk list --installed " .. quoted_pkg .. " 2>/dev/null | head -n1")
+        if line then
+            local first = line:match("^(%S+)")
+            local prefix = pkg .. "-"
+            if first and first:sub(1, #prefix) == prefix then
+                local version = first:sub(#prefix + 1)
+                if version ~= "" then
+                    return version
+                end
+            end
+        end
+
+        local db_version = read_apk_db_version(pkg)
+        if db_version and db_version ~= "" then
+            return db_version
         end
     end
 
     -- Fallback to opkg if present.
     if nixio.fs.access("/bin/opkg") or nixio.fs.access("/usr/bin/opkg") then
-        local v = shell_read("opkg status " .. pkg .. " 2>/dev/null | sed -n 's/^Version: //p' | head -n1")
+        local v = shell_read("opkg status " .. quoted_pkg .. " 2>/dev/null | sed -n 's/^Version: //p' | head -n1")
         if v then
             return v
         end
@@ -393,6 +448,7 @@ local function get_service_status()
                 local result = check:read("*l")
                 check:close()
                 status.running = (result == "running")
+                
             end
         end
     end
@@ -411,20 +467,24 @@ local function get_service_status()
     status.operational_mode = uci:get('geomate', 'global', 'operational_mode') or 'dynamic'
     status.debug_level = tonumber(uci:get('geomate', 'global', 'debug_level')) or 0
 
-    -- Check nftables status
-    local nft_check = io.popen("nft list table inet geomate 2>/dev/null")
-    if nft_check then
-        local result = nft_check:read("*a")
-        nft_check:close()
-        status.nft_active = (result ~= nil and result ~= "")
+    -- Check Geomate's nftables table status.
+    if nft_available() then
+        local nft_check = io.popen("nft list table inet geomate 2>/dev/null")
+        if nft_check then
+            local result = nft_check:read("*a")
+            nft_check:close()
+            status.nft_active = (result ~= nil and result ~= "")
+        end
     end
 
     -- Count nft sets
-    local nft_sets = io.popen("nft list sets inet geomate 2>/dev/null | grep -c 'set geomate_'")
-    if nft_sets then
-        local count = nft_sets:read("*l")
-        nft_sets:close()
-        status.nft_sets_count = tonumber(count) or 0
+    if nft_available() then
+        local nft_sets = io.popen("nft list sets inet geomate 2>/dev/null | grep -c 'set geomate_'")
+        if nft_sets then
+            local count = nft_sets:read("*l")
+            nft_sets:close()
+            status.nft_sets_count = tonumber(count) or 0
+        end
     end
 
     -- Get filter information
@@ -556,17 +616,22 @@ local function run_health_check()
         health.checks.service = { status = "warning", message = "Inconsistent state: config=" .. tostring(config_enabled) .. ", autostart=" .. tostring(autostart) }
     end
 
-    -- Check 5: nftables table (only if service is enabled)
+    -- Check 5: nft command and Geomate nftables table
     if config_enabled then
-        local nft_check = io.popen("nft list table inet geomate 2>/dev/null")
-        if nft_check then
-            local result = nft_check:read("*a")
-            nft_check:close()
-            if result and result ~= "" then
-                health.checks.nft = { status = "ok", message = "nftables table active" }
-            else
-                health.checks.nft = { status = "error", message = "nftables table not active" }
-                health.errors = health.errors + 1
+        if not nft_available() then
+            health.checks.nft = { status = "error", message = "nft command not installed" }
+            health.errors = health.errors + 1
+        else
+            local nft_check = io.popen("nft list table inet geomate 2>/dev/null")
+            if nft_check then
+                local result = nft_check:read("*a")
+                nft_check:close()
+                if result and result ~= "" then
+                    health.checks.nft = { status = "ok", message = "Geomate nftables table active" }
+                else
+                    health.checks.nft = { status = "error", message = "Geomate nftables table inactive; start or restart Geomate" }
+                    health.errors = health.errors + 1
+                end
             end
         end
 
@@ -593,7 +658,12 @@ local function run_health_check()
             health.errors = health.errors + 1
         end
     else
-        health.checks.nft = { status = "info", message = "Skipped (service disabled)" }
+        if nft_available() then
+            health.checks.nft = { status = "info", message = "Geomate nftables table skipped (service disabled)" }
+        else
+            health.checks.nft = { status = "error", message = "nft command not installed" }
+            health.errors = health.errors + 1
+        end
         health.checks.process = { status = "info", message = "Skipped (service disabled)" }
     end
 

@@ -1,0 +1,11 @@
+--- a/config.make.in
++++ b/config.make.in
+@@ -47,7 +47,7 @@ LIBHOGWEED_LINK = $(CC) $(CFLAGS) $(LDF
+ LIBHOGWEED_FORLINK = @LIBHOGWEED_FORLINK@
+ LIBHOGWEED_LIBS = libnettle.@LIBEXT@ $(LIBS)
+ 
+-NUMB_BITS = @NUMB_BITS@
++override NUMB_BITS = @NUMB_BITS@
+ 
+ AR = @AR@
+ ARFLAGS = cru

@@ -1,16 +1,35 @@
 #!/bin/sh
 
-# Configure sqm-autorate based on existing SQM settings, then enable the service.
+# Configure sqm-autorate based on existing SQM settings.
 # Safe no-op if package/config is absent.
 
 [ -f /etc/config/sqm-autorate ] || exit 0
 
-# Use SQM queue[0] as source of truth when available.
+resolve_device() {
+  local dev="$1"
+  local resolved
+
+  [ -n "$dev" ] || return
+
+  resolved="$(uci -q get network.$dev.device)"
+  [ -n "$resolved" ] || resolved="$(uci -q get network.$dev.ifname)"
+  printf '%s\n' "${resolved:-$dev}"
+}
+
+# Use SQM queue[0] as source of truth when it is enabled.  sqm-autorate
+# requires CAKE qdiscs already created by SQM, so do not start it for the
+# stock disabled SQM config.
+SQM_ENABLED="$(uci -q get sqm.@queue[0].enabled)"
 SQM_IF="$(uci -q get sqm.@queue[0].interface)"
 SQM_UL="$(uci -q get sqm.@queue[0].upload)"
 SQM_DL="$(uci -q get sqm.@queue[0].download)"
+WAN_DEV="$(resolve_device wan)"
 
-[ -n "$SQM_IF" ] || SQM_IF="wan"
+if [ "$SQM_ENABLED" = "1" ] && [ -n "$SQM_IF" ]; then
+  SQM_IF="$(resolve_device "$SQM_IF")"
+else
+  SQM_IF="${WAN_DEV:-wan}"
+fi
 
 case "$SQM_IF" in
   ifb*|veth*)
@@ -48,10 +67,14 @@ set sqm-autorate.@output[0].suppress_statistics='yes'
 commit sqm-autorate
 EOT
 
-# Enable/start only when sqm-autorate init script exists.
 if [ -x /etc/init.d/sqm-autorate ]; then
-  /etc/init.d/sqm-autorate enable >/dev/null 2>&1
-  /etc/init.d/sqm-autorate restart >/dev/null 2>&1
+  if [ "$SQM_ENABLED" = "1" ]; then
+    /etc/init.d/sqm-autorate enable >/dev/null 2>&1
+  else
+    /etc/init.d/sqm-autorate disable >/dev/null 2>&1
+    /etc/init.d/sqm-autorate stop >/dev/null 2>&1
+    logger -t sqm-autorate "configured for $UL_IF/$DL_IF but left disabled because SQM queue[0] is not enabled"
+  fi
 fi
 
 exit 0

@@ -14,29 +14,10 @@ LUCI_PKGARCH:=all
 define Build/Compile
 endef
 
-define Package/luci-app-geomate/install
-$(INSTALL_DIR) $(1)/www/luci-static/resources/view/geomate
-$(INSTALL_DATA) $(PKG_BUILD_DIR)/files/www/luci-static/resources/view/geomate/view.js $(1)/www/luci-static/resources/view/geomate/view.js
-$(INSTALL_DATA) $(PKG_BUILD_DIR)/files/www/luci-static/resources/view/geomate/geofilters.js $(1)/www/luci-static/resources/view/geomate/geofilters.js
-$(INSTALL_DATA) $(PKG_BUILD_DIR)/files/www/luci-static/resources/view/geomate/map.html $(1)/www/luci-static/resources/view/geomate/map.html
-
-$(INSTALL_DIR) $(1)/usr/share/luci/menu.d/
-$(INSTALL_DATA) $(PKG_BUILD_DIR)/files/usr/share/luci/menu.d/luci-app-geomate.json $(1)/usr/share/luci/menu.d/luci-app-geomate.json
-
-$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d/
-$(INSTALL_DATA) $(PKG_BUILD_DIR)/files/usr/share/rpcd/acl.d/luci-app-geomate.json $(1)/usr/share/rpcd/acl.d/luci-app-geomate.json
-
-$(INSTALL_DIR) $(1)/usr/libexec/rpcd/
-$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/usr/libexec/rpcd/luci.geomate $(1)/usr/libexec/rpcd/luci.geomate
-
-$(INSTALL_DIR) $(1)/etc/uci-defaults/
-$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/etc/uci-defaults/99-luci-app-geomate $(1)/etc/uci-defaults/99-luci-app-geomate
-endef
-
 define Package/luci-app-geomate/postinst
 #!/bin/sh
 [ -n "$$IPKG_INSTROOT" ] && exit 0
-[ -x /usr/libexec/rpcd/luci.geomate ] && chmod +x /usr/libexec/rpcd/luci.geomate
+[ -f /usr/libexec/rpcd/luci.geomate ] && chmod 0755 /usr/libexec/rpcd/luci.geomate
 [ -x /etc/init.d/rpcd ] && /etc/init.d/rpcd restart
 [ -x /etc/init.d/uhttpd ] && /etc/init.d/uhttpd restart
 exit 0

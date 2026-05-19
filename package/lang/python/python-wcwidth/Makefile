@@ -1,54 +1,17 @@
-#
-# Copyright (C) 2019-2020 CZ.NIC z.s.p.o. (http://www.nic.cz/)
-#
-# This is free software, licensed under the GNU General Public License v2.
-# See /LICENSE for more information.
-#
-#
-
 include $(TOPDIR)/rules.mk
-
-PKG_NAME:=python-wcwidth
-PKG_VERSION:=0.2.5
-PKG_RELEASE:=1
+include $(TOPDIR)/package/lang/python/oldpythonfix.mk
 
 PYPI_NAME:=wcwidth
+PKG_VERSION:=0.2.5
+PKG_RELEASE:=1
+PKG_URL:=https://github.com/jquast/wcwidth
 PKG_HASH:=c4d647b99872929fdb7bdcaa4fbe7f01413ed3d98077df798530e5b04f116c83
-
+PKG_TITLE:=Terminal width calculation library
 PKG_MAINTAINER:=Jan Pavlinec <jan.pavlinec1@gmail.com>
 PKG_LICENSE:=MIT
-PKG_LICENSE_FILES:=LICENSE.txt
+PKG_LICENSE_FILES:=LICENSE
+PKG_DEPENDS:=+python3-light
 
-include $(TOPDIR)/feeds/packages/lang/python/pypi.mk
-include $(INCLUDE_DIR)/package.mk
-include $(TOPDIR)/feeds/packages/lang/python/python3-package.mk
-
-define Package/python3-wcwidth
-  SECTION:=lang
-  CATEGORY:=Languages
-  SUBMENU:=Python
-  TITLE:=Terminal width calculation library
-  URL:=https://github.com/jquast/wcwidth
-  DEPENDS:=+python3-light
-endef
-
-define Package/python3-wcwidth/description
-  Python library that measures the width of unicode strings rendered to a terminal
-endef
-
-define Package/python3-wcwidth-src
-  SECTION:=lang
-  CATEGORY:=Languages
-  SUBMENU:=Python
-  TITLE:=Terminal width calculation library (source code)
-  URL:=https://github.com/jquast/wcwidth
-  DEPENDS:=+python3-wcwidth
-endef
-
-define Package/python3-wcwidth-src/description
-  Python library that measures the width of unicode strings rendered to a terminal (source code)
-endef
-
-$(eval $(call Py3Package,python3-wcwidth))
-$(eval $(call BuildPackage,python3-wcwidth))
-$(eval $(call BuildPackage,python3-wcwidth-src))
+$(eval $(call Py3Package,$(PKG_NAME)))
+$(eval $(call BuildPackage,$(PKG_NAME)))
+$(eval $(call BuildPackage,$(PKG_NAME)-src))

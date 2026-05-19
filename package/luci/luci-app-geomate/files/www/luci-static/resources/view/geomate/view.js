@@ -7,6 +7,9 @@
 'require poll';
 'require fs';
 
+const UI_VERSION = '1.2.0';
+const UI_UPD_CHANNEL = 'release';
+
 // Format version for display (shorten commit hashes to 8 characters)
 function formatVersionDisplay(version) {
     if (!version) return version;
@@ -84,14 +87,23 @@ return view.extend({
     // Load initial data required for the view
     load: function() {
         return Promise.all([
-            uci.load('geomate'),
-            callGeomateConnections(),
-            callGeomateAllowedIPs(),
+            uci.load('geomate').catch(function(error) {
+                console.error('Error loading geomate config:', error);
+                return null;
+            }),
+            callGeomateConnections().catch(function(error) {
+                console.error('Error loading Geomate connections:', error);
+                return { connections: [] };
+            }),
+            callGeomateAllowedIPs().catch(function(error) {
+                console.error('Error loading Geomate allowed IPs:', error);
+                return { allowed_ips: [] };
+            }),
             getServiceStatus()
         ]).then(function(data) {
             var geomateConfig = data[0];
-            var connectionsResult = data[1];
-            var allowedIPsResult = data[2];
+            var connectionsResult = data[1] || {};
+            var allowedIPsResult = data[2] || {};
             var serviceStatus = data[3];
     
             this.currentConnectionsData = connectionsResult.connections || [];
@@ -105,6 +117,7 @@ return view.extend({
             return data;
         }.bind(this)).catch(function(error) {
             console.error('Error loading data:', error);
+            return [ null, { connections: [] }, { allowed_ips: [] }, 'Not Running' ];
         });
     },
 
@@ -112,12 +125,13 @@ return view.extend({
     render: function(data) {
         var self = this;
         var m, s, o;
+        data = data || [ null, { connections: [] }, { allowed_ips: [] }, 'Not Running' ];
         var geomateConfig = data[0];
 
         // We only handle connectionsResult, allowedIPsResult after map is ready
         // to prevent heavy parallel load
-        var connectionsResult = data[1];
-        var allowedIPsResult = data[2];
+        var connectionsResult = data[1] || {};
+        var allowedIPsResult = data[2] || {};
         // We'll defer serviceStatus calls to after mapReady event
         // var serviceStatus = data[3]; // remove immediate usage
 
@@ -380,7 +394,7 @@ return view.extend({
                                     'files': 'Files', 
                                     'datadir': 'Data',
                                     'service': 'Autostart',
-                                    'nft': 'nftables'
+                                    'nft': 'Geomate table'
                                 };
                                 
                                 checkOrder.forEach(function(key) {
@@ -894,7 +908,7 @@ return view.extend({
             .then(() => {
                 this.sendMessageToMap('clearMap');
                 this.loadGeoFilters();
-                ui.addNotification(null, E('p', _('Form values have been reset')), 'success');
+                ui.addNotification(null, E('p', _('Form values have been set')), 'success');
             });
     },
 
@@ -992,8 +1006,11 @@ return view.extend({
         }
 
         return callGetVersions().then(function(data) {
-            var backendVersion = (data && data.backend_version) ? data.backend_version : 'unknown';
-            var frontendVersion = (data && data.frontend_version) ? data.frontend_version : 'unknown';
+            if (data && data.result)
+                data = data.result;
+
+            var backendVersion = (data && data.backend_version && data.backend_version !== 'unknown') ? data.backend_version : UI_VERSION;
+            var frontendVersion = (data && data.frontend_version && data.frontend_version !== 'unknown') ? data.frontend_version : UI_VERSION;
 
             if (versionDisplayElement) {
                 versionDisplayElement.textContent =
@@ -1009,12 +1026,14 @@ return view.extend({
             console.error('Error loading package versions:', err);
 
             if (versionDisplayElement) {
-                versionDisplayElement.textContent = _('Backend: unknown | Frontend: unknown');
+                versionDisplayElement.textContent =
+                    'Backend: ' + formatVersionDisplay(UI_VERSION) +
+                    ' | Frontend: ' + formatVersionDisplay(UI_VERSION);
             }
 
             if (statusElement) {
-                statusElement.textContent = _('Version unavailable');
-                statusElement.style.color = '#dc2626';
+                statusElement.textContent = _('Package managed');
+                statusElement.style.color = '#6b7280';
             }
         });
     }

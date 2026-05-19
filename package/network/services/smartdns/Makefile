@@ -73,6 +73,8 @@ define Package/smartdns/install
 	$(INSTALL_CONF) $(PKG_BUILD_DIR)/package/openwrt/blacklist-ip.conf $(1)/etc/smartdns/blacklist-ip.conf
 	$(INSTALL_CONF) $(PKG_BUILD_DIR)/package/openwrt/custom.conf $(1)/etc/smartdns/custom.conf
 	$(INSTALL_CONF) $(PKG_BUILD_DIR)/package/openwrt/files/etc/config/smartdns $(1)/etc/config/smartdns
+	$(INSTALL_DIR) $(1)/etc/uci-defaults/
+	$(INSTALL_BIN) .${IPKG_INSTROOT}/files/10-smartdns-fallback-resolvers $(1)/etc/uci-defaults/10-smartdns-fallback-resolvers
 endef
 
 define Package/smartdns-ui
@@ -137,6 +139,7 @@ ifdef CONFIG_PACKAGE_smartdns-ui
 	$(call Build/Compile/smartdns-webui)
 endif
 endef
+
 
 $(eval $(call BuildPackage,smartdns))
 $(eval $(call RustBinPackage,smartdns-ui))

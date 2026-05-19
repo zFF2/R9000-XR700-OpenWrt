@@ -39,7 +39,7 @@ endef
 define Package/sqm-autorate/postinst
 #!/bin/sh
 echo "Configuration script can be found at /usr/lib/sqm-autorate/configure.sh"
-exit 0
+exit 0;
 endef
 
 define Build/Compile

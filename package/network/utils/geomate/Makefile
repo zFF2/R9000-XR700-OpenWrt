@@ -22,7 +22,7 @@ define Package/geomate
   SECTION:=net
   CATEGORY:=Network
   TITLE:=Geographic IP filtering for game servers
-  DEPENDS:=+curl +jq @nftables
+  DEPENDS:=+curl +jq +nftables
   PKGARCH:=all
   URL:=https://github.com/hudra0/geomate
 endef
@@ -42,11 +42,24 @@ endef
 define Package/geomate/postinst
 #!/bin/sh
 [ -n "$$IPKG_INSTROOT" ] && exit 0
-[ -x /usr/libexec/geomate/geolocate.sh ] && /usr/libexec/geomate/geolocate.sh
-[ -x /etc/init.d/geomate ] && \
-/etc/init.d/geomate enable && \
-sleep 2 && \
-/etc/init.d/geomate start && \
+
+[ -x /usr/libexec/geomate/geolocate.sh ] && /usr/libexec/geomate/geolocate.sh || true
+
+if [ -x /etc/init.d/geomate ]; then
+	/etc/init.d/geomate start || true
+
+	sleep 5
+	i=0
+	while [ -f "/tmp/geomate_loading" ] && [ "$$i" -lt 60 ]; do
+		sleep 2
+		i=$$((i + 1))
+	done
+
+	/etc/init.d/geomate stop || true
+	/etc/init.d/geomate disable || true
+	uci -q set geomate.global.enabled='0' || true
+	uci -q commit geomate || true
+fi
 exit 0
 endef
 
@@ -54,19 +67,19 @@ define Build/Compile
 endef
 
 define Package/geomate/install
-	$(INSTALL_DIR) $(1)/etc/init.d/
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/etc/init.d/geomate $(1)/etc/init.d/
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/etc/init.d/geomate $(1)/etc/init.d
 	
-	$(INSTALL_DIR) $(1)/etc/config/
-	$(INSTALL_CONF) $(PKG_BUILD_DIR)/files/etc/config/geomate $(1)/etc/config/
+	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_CONF) $(PKG_BUILD_DIR)/files/etc/config/geomate $(1)/etc/config/geomate
 
-	$(INSTALL_DIR) $(1)/usr/libexec/geomate/
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/etc/geomate.sh $(1)/usr/libexec/geomate/
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/etc/geomate_trigger.sh $(1)/usr/libexec/geomate/
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/etc/geolocate.sh $(1)/usr/libexec/geomate/
+	$(INSTALL_DIR) $(1)/usr/libexec/geomate
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/etc/geomate.sh $(1)/usr/libexec/geomate/geomate.sh
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/etc/geomate_trigger.sh $(1)/usr/libexec/geomate/geomate_trigger.sh
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/etc/geolocate.sh $(1)/usr/libexec/geomate/geolocate.sh
 	
-	$(INSTALL_DIR) $(1)/etc/geomate.d/
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/files/etc/geomate.d/*.txt $(1)/etc/geomate.d/
+	$(INSTALL_DIR) $(1)/etc/geomate.d
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/files/etc/geomate.d/*.txt $(1)/etc/geomate.d
 	# Package-managed builds do not use Geomate self-updater manifests.
 	# Ship marker files so init script integrity checks do not fail on missing paths.
 	touch $(1)/etc/geomate.d/backend_reg.md5

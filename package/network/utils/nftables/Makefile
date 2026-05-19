@@ -37,14 +37,14 @@ define Package/nftables/Default
   CATEGORY:=Network
   SUBMENU:=Firewall
   TITLE:=nftables userspace utility
-  DEPENDS:=+kmod-nft-core +libnftnl
-  URL:=http://netfilter.org/projects/nftables/
+  DEPENDS:=+kmod-nft-core +libmnl +libnftnl
+  URL:=http://netfilter.org/projects/nftables
   PROVIDES:=nftables
 endef
 
 define Package/nftables-nojson
   $(Package/nftables/Default)
-  TITLE+= no JSON support
+  TITLE:= no JSON support
   VARIANT:=nojson
   DEFAULT_VARIANT:=1
   CONFLICTS:=nftables-json
@@ -52,7 +52,7 @@ endef
 
 define Package/nftables-json
   $(Package/nftables/Default)
-  TITLE+= with JSON support
+  TITLE:= with JSON support
   VARIANT:=json
   DEPENDS+=+jansson
 endef
@@ -67,7 +67,7 @@ define Build/InstallDev
 	$(CP) $(PKG_INSTALL_DIR)/usr/include/nftables $(1)/usr/include/
 	$(INSTALL_DIR) $(1)/usr/lib/pkgconfig
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/pkgconfig/libnftables.pc \
-		$(1)/usr/lib/pkgconfig/
+	$(1)/usr/lib/pkgconfig/
 endef
 
 define Package/nftables/install/Default

@@ -1,0 +1,17 @@
+#!/bin/sh
+
+uci -q get system.@system[0] >/dev/null || uci -q add system system >/dev/null
+
+uci -q batch <<'EOF'
+set system.@system[0].zram_size_mb='256'
+set system.@system[0].zram_priority='100'
+set system.@system[0].zram_comp_algo='lz4'
+commit system
+EOF
+
+[ -x /etc/init.d/zram ] || exit 0
+
+/etc/init.d/zram enable
+/etc/init.d/zram restart
+
+exit 0

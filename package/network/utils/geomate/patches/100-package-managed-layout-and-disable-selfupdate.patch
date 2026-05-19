@@ -50,71 +50,57 @@
  GEOMATE_EXTRA_FILES_BACKEND="" # might be useful in the future?
  
  ### Frontend files
-@@ -185,48 +183,22 @@
- }
+@@ -344,13 +316,16 @@
  
- start_service() {
--	# handle first run after installation or update from older versions
--	if [ "$VERSION" = dev ]; then
--		log_msg "" "Completing the upgrade of the update mechanism..."
--		update -f || return 1
--		# shellcheck disable=SC1090
--		. "${GEOMATE_SERVICE_PATH}" # source updated init script 
--	fi
--
- 	for component in $GEOMATE_COMPONENTS; do
- 		check_files_integrity "$component"
- 		case $? in
--			0) ;; # integrity OK
-+			0|3) ;; # integrity OK / checksum drift tolerated in package mode
- 			1) return 1 ;;
--			2) # missing files
--				local fix_upd_channel='' fix_version='' force_version=''
--				case "$component" in
--					BACKEND) fix_version="$VERSION" fix_upd_channel="$UPD_CHANNEL" ;;
--					FRONTEND) get_component_spec fix_version fix_upd_channel FRONTEND local 2>/dev/null
--				esac
--				case "$fix_version" in
--					dev|''|"1.0.0"|"v1.0.0") ;;
--					*) force_version="-W $fix_version"
--				esac
--				: "${fix_upd_channel:=release}"
--				update -U "$fix_upd_channel" $force_version -c "$component" || return 1 ;;
--			3) ;; # non-matching md5sums
-+			2)
-+				log_msg -warn "Missing files in component '$component'. Self-update is disabled in package-managed mode." ;;
- 		esac
- 	done
- 
--    # Recovery: Download default config if missing (e.g., after failed update)
-+    # Recovery: Recreate a minimal config if missing
-     if [ ! -f /etc/config/geomate ]; then
--        log_msg -warn "Config file missing, downloading default configuration from repository"
--        local config_url="${GEOMATE_GH_RAW_URL_BACKEND_MAIN}/files/etc/config/geomate"
--        if uclient-fetch "$config_url" -O /etc/config/geomate 2>/dev/null; then
--            chmod 644 /etc/config/geomate
--            log_msg "Default configuration downloaded successfully"
--        else
--            log_msg -err "Failed to download config, creating minimal fallback"
--            echo "config global 'global'
-+        log_msg -warn "Config file missing, creating minimal fallback configuration"
-+        echo "config global 'global'
- 	option enabled '1'" > /etc/config/geomate
--            chmod 644 /etc/config/geomate
--        fi
-+        chmod 644 /etc/config/geomate
+     # Check nftables status
+-    print_msg "" "==== nftables Status ===="
+-    if nft list table inet geomate >/dev/null 2>&1; then
+-        print_msg "Table inet geomate: active"
++    print_msg "" "==== Geomate nftables Table ===="
++    if ! command -v nft >/dev/null 2>&1; then
++        print_msg "nft command: missing"
++    elif nft list table inet geomate >/dev/null 2>&1; then
++        print_msg "Geomate table: active"
+         local set_count
+         set_count=$(nft list sets inet geomate 2>/dev/null | grep -c "set geomate_")
+         print_msg "Sets: $set_count active"
+     else
+-        print_msg "Table inet geomate: NOT active"
++        print_msg "Geomate table: not active"
++        print_msg "nftables itself is installed; start Geomate to create its table."
      fi
  
-     local enabled
-@@ -262,7 +234,7 @@
- }
+     # Show geolocation status
+@@ -366,7 +338,10 @@
  
- geolocate() {
--    /etc/geolocate.sh
-+    /usr/libexec/geomate/geolocate.sh
- }
+     # Show version info
+     print_msg "" "==== Version Information ===="
+-    check_version -n
++    print_msg "Backend versions:"
++    print_msg "  Update channel: $UPD_CHANNEL"
++    print_msg "  Current version: $VERSION"
++    print_msg "  Latest version: package-managed"
  
- status_service() {
+     # Run health check
+     print_msg "" "==== Health Check ===="
+@@ -529,10 +505,13 @@
+ 
+     # Check 3: nftables table exists
+-    if nft list table inet geomate >/dev/null 2>&1; then
+-        status="${status}nft:ok;"
++    if ! command -v nft >/dev/null 2>&1; then
++        status="${status}nft_cmd:missing;"
++        errors=$((errors + 1))
++    elif nft list table inet geomate >/dev/null 2>&1; then
++        status="${status}nft_table:ok;"
+     else
+-        status="${status}nft:missing;"
+-        if [ "$global_enabled" = "1" ]; then
++        status="${status}nft_table:inactive;"
++        if [ "$global_enabled" = "1" ] && [ "$service_enabled" = "1" ]; then
+             errors=$((errors + 1))
+         fi
+     fi
 @@ -539,7 +511,10 @@
  
      # Check 4: Required files exist
@@ -127,15 +113,4 @@
          if [ ! -f "$file" ]; then
              status="${status}file_${file##*/}:missing;"
              errors=$((errors + 1))
-@@ -1219,6 +1194,11 @@
- # -f : force update
- # -i : ignore previous cache results
- update() {
-+	error_out "Built-in updater is disabled in this OpenWrt package build."
-+	error_out "Use package upgrades instead (e.g. apk/opkg upgrade geomate luci-app-geomate)."
-+	error_out "Run: /etc/init.d/geomate restart after package upgrades."
-+	return 1
-+
- 	upd_failed() {
- 		rm -rf "${GEOMATE_UPD_DIR:-?}"
- 		[ -n "$*" ] && error_out "$@"
+

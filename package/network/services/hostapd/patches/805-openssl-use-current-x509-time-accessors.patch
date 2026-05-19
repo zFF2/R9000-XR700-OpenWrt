@@ -1,0 +1,18 @@
+--- a/src/crypto/tls_openssl.c
++++ b/src/crypto/tls_openssl.c
+@@ -2702,13 +2702,13 @@ static int tls_verify_cb(int preverify_o
+ 
+ 	if (!conn->ca_cert_verify && depth == 0 &&
+ 	    !(conn->flags & TLS_CONN_DISABLE_TIME_CHECKS)) {
+-		if (X509_cmp_current_time(X509_get_notBefore(err_cert)) > 0) {
++		if (X509_cmp_current_time(X509_get0_notBefore(err_cert)) > 0) {
+ 			wpa_printf(MSG_INFO,
+ 				   "OpenSSL: Server certificate is not valid at the current time");
+ 			err = X509_V_ERR_CERT_NOT_YET_VALID;
+ 			X509_STORE_CTX_set_error(x509_ctx, err);
+ 			preverify_ok = 0;
+-		} else if (X509_cmp_current_time(X509_get_notAfter(err_cert)) <
++		} else if (X509_cmp_current_time(X509_get0_notAfter(err_cert)) <
+ 			   0) {
+ 			wpa_printf(MSG_INFO,
+ 				   "TLS: Server certificate has expired");
