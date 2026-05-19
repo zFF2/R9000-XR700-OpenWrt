@@ -5,11 +5,13 @@ on:
     paths:
       - 'include/**'
       - 'tools/**'
+      - 'scripts/**'
       - '.github/workflows/tools.yml'
   push:
     paths:
       - 'include/**'
       - 'tools/**'
+      - 'scripts/**'
       - '.github/workflows/tools.yml'
     branches-ignore:
       - master
