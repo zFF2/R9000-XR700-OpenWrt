@@ -8,7 +8,7 @@ on:
       - 'target/linux/alpine/**'
     branches:
       - r9000-xr700-main
-
+      
 permissions:
   contents: write
   packages: write
@@ -19,3 +19,6 @@ jobs:
     uses: openwrt/actions-shared-workflows/.github/workflows/kernel.yml@main
     with:
       targets: linux/alpine/generic
+      permissions:
+        contents: write
+        packages: write
