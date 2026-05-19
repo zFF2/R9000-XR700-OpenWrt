@@ -7,6 +7,10 @@
 - changed-files:
   - any-glob-to-any-file:
     - "target/linux/apm821xx/**"
+"target/alpine":
+- changed-files:
+  - any-glob-to-any-file:
+    - "target/linux/alpine/**"
 "target/archs38":
 - changed-files:
   - any-glob-to-any-file:
