@@ -13,10 +13,10 @@ permissions:
 
 jobs:
   build:
-    name: Build alpine/generic
+    name: Build linux/alpine/generic/**
     permissions:
       contents: read
       packages: read
     uses: openwrt/actions-shared-workflows/.github/workflows/build.yml@main
     with:
-      targets: alpine/generic
+      targets: linux/alpine/generic
