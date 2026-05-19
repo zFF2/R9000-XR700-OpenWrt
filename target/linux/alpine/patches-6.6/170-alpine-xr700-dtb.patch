@@ -1,6 +1,6 @@
 --- a/arch/arm/boot/dts/Makefile
 +++ b/arch/arm/boot/dts/Makefile
-@@ -40,3 +40,7 @@ subdir-y += unisoc
+@@ -39,3 +39,7 @@
  subdir-y += vt8500
  subdir-y += xen
  subdir-y += xilinx
