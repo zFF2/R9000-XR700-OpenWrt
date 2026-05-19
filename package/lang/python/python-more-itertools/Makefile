@@ -13,7 +13,7 @@ PKG_MAINTAINER:=Jan Pavlinec <jan.pavlinec1@gmail.com>
 PKG_LICENSE:=MIT
 PKG_LICENSE_FILES:=LICENSE
 
-include $(TOPDIR)/package/lang/python/oldpythonfix.mk
+include $(TOPDIR)/package/lang/python/Makefile.mk
 
 $(eval $(call Py3Package,$(PKG_NAME)))
 $(eval $(call BuildPackage,$(PKG_NAME)))

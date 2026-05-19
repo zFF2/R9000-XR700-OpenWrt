@@ -1,5 +1,4 @@
 include $(TOPDIR)/rules.mk
-include $(TOPDIR)/package/lang/python/oldpythonfix.mk
 
 PYPI_NAME:=Unidecode
 PKG_VERSION:=1.1.1
@@ -11,6 +10,8 @@ PKG_MAINTAINER:=Josef Schlehofer <pepe.schlehofer@gmail.com>
 PKG_LICENSE:=GPL-2.0-or-later
 PKG_LICENSE_FILES:=LICENSE
 PKG_DEPENDS:=+python3-light
+
+include $(TOPDIR)/package/lang/python/Makefile.mk
 
 $(eval $(call Py3Package,$(PKG_NAME)))
 $(eval $(call BuildPackage,$(PKG_NAME)))

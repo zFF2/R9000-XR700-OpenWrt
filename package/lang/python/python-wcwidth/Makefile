@@ -1,5 +1,4 @@
 include $(TOPDIR)/rules.mk
-include $(TOPDIR)/package/lang/python/oldpythonfix.mk
 
 PYPI_NAME:=wcwidth
 PKG_VERSION:=0.2.5
@@ -11,6 +10,8 @@ PKG_MAINTAINER:=Jan Pavlinec <jan.pavlinec1@gmail.com>
 PKG_LICENSE:=MIT
 PKG_LICENSE_FILES:=LICENSE
 PKG_DEPENDS:=+python3-light
+
+include $(TOPDIR)/package/lang/python/Makefile.mk
 
 $(eval $(call Py3Package,$(PKG_NAME)))
 $(eval $(call BuildPackage,$(PKG_NAME)))

@@ -31,4 +31,3 @@ endef
 define Package/$(PKG_NAME)-src/description
   $(PKG_TITLE) (source code)
 endef
-
