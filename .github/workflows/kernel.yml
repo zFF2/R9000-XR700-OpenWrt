@@ -8,16 +8,14 @@ on:
       - 'target/linux/alpine/**'
     branches:
       - r9000-xr700-main
-
-permissions:
-  contents: read
-  
+    permissions:
+      contents: read
 jobs:
   build:
     name: Build linux/alpine/generic
     permissions:
-      contents: read
-      packages: read
-    uses: openwrt/actions-shared-workflows/.github/workflows/kernel.yml@main
+  contents: write
+  packages: write
+    uses:
     with:
       targets: linux/alpine/generic
