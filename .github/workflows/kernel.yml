@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - '.github/workflows/build-alpine-generic.yml'
+      - 'target/linux/alpine/**'
     branches:
       - r9000-xr700-main
 
@@ -13,7 +14,7 @@ permissions:
 
 jobs:
   build:
-    name: Build linux/alpine/generic/**
+    name: Build linux/alpine/generic
     permissions:
       contents: read
       packages: read
