@@ -101,14 +101,7 @@
 }
 #else
 #define AL_DMA_STATS_INC(var, incval)
-#define AL_DMA_STATS_UPDATE(chan, num, cnt, size, size_inc)	\
-do {								\
-	(void)(chan);						\
-	(void)(num);						\
-	(void)(cnt);						\
-	(void)(size);						\
-	(void)(size_inc);					\
-} while (0)
+#define AL_DMA_STATS_UPDATE(chan, num, cnt, size, size_inc)
 #endif
 
 enum al_unmap_type {

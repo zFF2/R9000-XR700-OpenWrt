@@ -1,2 +1,27 @@
-uci set network.@device[0].ports='eth0'; uci add_list network.@device[0].ports='eth1.1'; uci commit network;
-uci -q delete system.@led[0]; uci add system led; uci set system.@led[0].name='SFP'; uci set system.@led[0].sysfs='white:sfp'; uci set system.@led[0].trigger='netdev'; uci set system.@led[0].dev='eth0'; uci set system.@led[0].mode='link'; uci add_list system.@led[0].mode='tx'; uci add_list system.@led[0].mode='rx'; uci commit system;
+#!/bin/sh
+
+. /lib/functions/system.sh
+
+case "$(board_name)" in
+netgear,r9000|netgear,xr700|r9000|xr700)
+	;;
+*)
+	exit 0
+	;;
+esac
+
+uci -q batch <<'EOF'
+delete system.sfp_led
+set system.sfp_led='led'
+set system.sfp_led.name='SFP'
+set system.sfp_led.sysfs='white:sfp'
+set system.sfp_led.trigger='netdev'
+set system.sfp_led.dev='eth0'
+set system.sfp_led.mode='link'
+add_list system.sfp_led.mode='tx'
+add_list system.sfp_led.mode='rx'
+EOF
+
+uci commit system
+
+exit 0

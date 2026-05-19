@@ -1,1 +1,0 @@
-uci set zram.@zram[0].enabled='1'; uci set zram.@zram[0].size='256'; uci commit zram; /etc/init.d/zram enable; /etc/init.d/zram start;

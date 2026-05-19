@@ -1399,13 +1399,16 @@ config KERNEL_EROFS_FS
 
 config KERNEL_EROFS_FS_XATTR
 	bool "EROFS XATTR support"
+	depends on KERNEL_EROFS_FS
 
 config KERNEL_EROFS_FS_ZIP
 	bool
+	depends on KERNEL_EROFS_FS
 	default y if KERNEL_EROFS_FS
 
 config KERNEL_EROFS_FS_ZIP_LZMA
 	bool
+	depends on KERNEL_EROFS_FS_ZIP
 	default y if KERNEL_EROFS_FS
 
 menu "Filesystem ACL and attr support options"
@@ -1430,6 +1433,7 @@ menu "Filesystem ACL and attr support options"
 
 	config KERNEL_EROFS_FS_POSIX_ACL
 		bool "Enable POSIX ACL for EROFS Filesystems"
+		depends on KERNEL_EROFS_FS
 		select KERNEL_FS_POSIX_ACL
 		default y if USE_FS_ACL_ATTR
 
@@ -1577,6 +1581,7 @@ config KERNEL_LSM
 
 config KERNEL_EROFS_FS_SECURITY
 	bool "EROFS Security Labels"
+	depends on KERNEL_EROFS_FS
 	default y if !SMALL_FLASH
 	select KERNEL_EROFS_FS_XATTR
 

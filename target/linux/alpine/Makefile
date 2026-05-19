@@ -16,6 +16,8 @@ KERNELNAME:=zImage Image dtbs
 
 include $(INCLUDE_DIR)/target.mk
 
+DEFAULT_PACKAGES := $(filter-out uclient-fetch,$(DEFAULT_PACKAGES))
+
 DEFAULT_PACKAGES += \
 	kmod-leds-gpio kmod-gpio-button-hotplug \
 	kmod-ata-ahci kmod-ata-ahci-platform \
@@ -24,6 +26,6 @@ DEFAULT_PACKAGES += \
 	kmod-usb-storage kmod-scsi-core kmod-fs-ext4 kmod-fs-vfat kmod-fs-msdos block-mount \
 	kmod-al-eth kmod-mdio-al-gpio kmod-swconfig swconfig \
 	cfdisk e2fsprogs badblocks partx-utils \
-	wpad-openssl uboot-envtools
+	wpad-openssl uboot-envtools \
 
 $(eval $(call BuildTarget))

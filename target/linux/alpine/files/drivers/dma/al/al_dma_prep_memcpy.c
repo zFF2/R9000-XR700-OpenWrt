@@ -38,8 +38,8 @@ struct dma_async_tx_descriptor *al_dma_prep_memcpy_lock(
 	int idx;
 	int32_t rc;
 	int sw_desc_num_req = ALIGN(len, MAX_SIZE) / MAX_SIZE;
-	int sw_desc_num_req_orig = sw_desc_num_req;
-	size_t len_orig = len;
+	int sw_desc_num_req_orig __maybe_unused = sw_desc_num_req;
+	size_t len_orig __maybe_unused = len;
 
 	dev_dbg(
 		chan->device->common.dev,
@@ -162,4 +162,3 @@ struct dma_async_tx_descriptor *al_dma_prep_memcpy_lock(
 
 	return txd;
 }
-

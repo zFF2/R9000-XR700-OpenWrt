@@ -3,6 +3,12 @@
 include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/image.mk
 
+# This NAND upgrade path identifies the tar rootfs by its first word; EROFS
+# stores its magic at offset 1024, so generated sysupgrade images are unsafe.
+ifeq ($(CONFIG_TARGET_ROOTFS_EROFS),y)
+  $(error alpine NAND sysupgrade does not support EROFS rootfs; use squashfs)
+endif
+
 DEVICE_VARS += NETGEAR_BOARD_ID NETGEAR_HW_ID
 
 define Device/Default
@@ -20,7 +26,7 @@ define Device/DniImage
 	KERNEL_NAME := zImage
 	KERNEL_SIZE := 32768k
 	DEVICE_VENDOR := NETGEAR
-	DEVICE_PACKAGES :=
+	DEVICE_PACKAGES := -uclient-fetch
 	NETGEAR_BOARD_ID :=
 	NETGEAR_HW_ID := 29765235+0+512+1024+4x4+4x4
 	SOC := alpine

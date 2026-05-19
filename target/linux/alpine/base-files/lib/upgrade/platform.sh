@@ -10,7 +10,9 @@ platform_check_image() {
 platform_do_upgrade() {
 	case "$(board_name)" in
 	netgear,r9000|\
-	netgear,xr700)
+	netgear,xr700|\
+	r9000|\
+	xr700)
 		nand_do_upgrade "$1"
 		;;
 	*)
