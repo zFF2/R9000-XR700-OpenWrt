@@ -4,14 +4,14 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - '.github/workflows/build-alpine-generic.yml'
+      - 'package/kernel/**'
       - 'target/linux/alpine/**'
     branches:
       - r9000-xr700-main
 
 permissions:
   contents: read
-
+  
 jobs:
   build:
     name: Build linux/alpine/generic
