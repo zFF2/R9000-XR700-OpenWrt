@@ -1,0 +1,5 @@
+[submodule "https://github.com/mdsdtech/luci-theme-alpha-reborn.git"]
+	url = ./package/luci/luci-theme-alpha-reborn
+[submodule "package/luci/luci-theme-alpha-reborn"]
+	path = package/luci/luci-theme-alpha-reborn
+	url = https://github.com/mdsdtech/luci-theme-alpha-reborn.git

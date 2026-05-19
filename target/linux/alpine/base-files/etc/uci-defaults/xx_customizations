@@ -2,13 +2,4 @@
 # Custom board tweaks can be added here. This runs once on first boot.
 
 # Keep script successful even when no customizations are defined.
-. /lib/functions/uci-defaults.sh
-board_config_update
-json_select network
-json_select lan
-json_add_string ipaddr "10.0.0.1"
-json_add_string netmask "255.255.255.0"
-json_select ..
-json_select ..
-board_config_flush
 exit 0
