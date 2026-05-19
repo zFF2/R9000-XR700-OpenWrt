@@ -19,6 +19,6 @@ jobs:
     uses: openwrt/actions-shared-workflows/.github/workflows/kernel.yml@main
     with:
       targets: linux/alpine/generic
-      permissions:
-        contents: write
-        packages: write
+permissions:
+  contents: write
+  packages: write
