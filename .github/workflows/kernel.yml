@@ -18,6 +18,6 @@ jobs:
     permissions:
       contents: read
       packages: read
-    uses: openwrt/actions-shared-workflows/.github/workflows/build.yml@main
+    uses: openwrt/actions-shared-workflows/.github/workflows/kernel.yml@main
     with:
       targets: linux/alpine/generic
