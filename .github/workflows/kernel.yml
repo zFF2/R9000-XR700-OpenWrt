@@ -19,3 +19,4 @@ jobs:
     uses:
     with:
       targets: linux/alpine/generic
+      uses: openwrt/actions-shared-workflows/.github/workflows/kernel.yml@main
