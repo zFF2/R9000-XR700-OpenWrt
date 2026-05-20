@@ -1,11 +1,3 @@
-[submodule "https://github.com/mdsdtech/luci-theme-alpha-reborn.git"]
-	url = ./package/luci/luci-theme-alpha-reborn
-[submodule "package/luci/luci-theme-alpha-reborn"]
-	path = package/luci/luci-theme-alpha-reborn
-	url = https://github.com/mdsdtech/luci-theme-alpha-reborn.git
-[submodule "package/luci/package/luci/luci-app-alpha-config"]
-	path = package/luci/package/luci/luci-app-alpha-config
-	url = https://github.com/animegasan/luci-app-alpha-config.git
 [submodule "package/luci/luci-app-alpha-config"]
 	path = package/luci/luci-app-alpha-config
 	url = https://github.com/animegasan/luci-app-alpha-config.git
