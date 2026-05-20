@@ -1,6 +1,6 @@
 --- a/drivers/dma/Kconfig
 +++ b/drivers/dma/Kconfig
-@@ -780,6 +780,8 @@ source "drivers/dma/fsl-dpaa2-qdma/Kconf
+@@ -758,6 +758,8 @@ source "drivers/dma/fsl-dpaa2-qdma/Kconf
  
  source "drivers/dma/lgm/Kconfig"
  
@@ -11,7 +11,7 @@
  	depends on DMA_ENGINE
 --- a/drivers/dma/Makefile
 +++ b/drivers/dma/Makefile
-@@ -88,3 +88,4 @@ obj-y += mediatek/
+@@ -87,3 +87,4 @@ obj-y += mediatek/
  obj-y += qcom/
  obj-y += ti/
  obj-y += xilinx/

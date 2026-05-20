@@ -1,6 +1,6 @@
 --- a/drivers/net/mdio/Kconfig
 +++ b/drivers/net/mdio/Kconfig
-@@ -272,6 +272,12 @@ config MDIO_BUS_MUX_MMIOREG
+@@ -297,6 +297,12 @@ config MDIO_BUS_MUX_MMIOREG
  
  	  Currently, only 8/16/32 bits registers are supported.
  
@@ -15,7 +15,7 @@
  endif
 --- a/drivers/net/mdio/Makefile
 +++ b/drivers/net/mdio/Makefile
-@@ -22,6 +22,7 @@ obj-$(CONFIG_MDIO_OCTEON)		+= mdio-octeo
+@@ -23,6 +23,7 @@ obj-$(CONFIG_MDIO_REGMAP)		+= mdio-regma
  obj-$(CONFIG_MDIO_SUN4I)		+= mdio-sun4i.o
  obj-$(CONFIG_MDIO_THUNDER)		+= mdio-thunder.o
  obj-$(CONFIG_MDIO_XGENE)		+= mdio-xgene.o

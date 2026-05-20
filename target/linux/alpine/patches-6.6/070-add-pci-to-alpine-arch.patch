@@ -1,6 +1,6 @@
 --- a/arch/arm/mach-alpine/Kconfig
 +++ b/arch/arm/mach-alpine/Kconfig
-@@ -10,4 +10,8 @@ config ARCH_ALPINE
+@@ -11,5 +11,9 @@ config ARCH_ALPINE
  	select MFD_SYSCON
  	select FORCE_PCI
  	select PCI_HOST_GENERIC

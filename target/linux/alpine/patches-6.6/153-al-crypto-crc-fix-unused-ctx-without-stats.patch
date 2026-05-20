@@ -1,6 +1,6 @@
 --- a/drivers/crypto/al/al_crypto_crc.c
 +++ b/drivers/crypto/al/al_crypto_crc.c
-@@ -147,11 +147,15 @@
+@@ -147,11 +147,15 @@ static int al_crc_cra_init(struct crypto
   *****************************************************************************/
  static void al_crc_cra_exit(struct crypto_tfm *tfm)
  {

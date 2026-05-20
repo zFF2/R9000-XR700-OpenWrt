@@ -1,6 +1,6 @@
 --- a/drivers/irqchip/irq-gic.c
 +++ b/drivers/irqchip/irq-gic.c
-@@ -706,6 +706,20 @@ void gic_cpu_restore(struct gic_chip_dat
+@@ -707,6 +707,20 @@ void gic_cpu_restore(struct gic_chip_dat
  	gic_cpu_if_up(gic);
  }
  
@@ -21,7 +21,7 @@
  static int gic_notifier(struct notifier_block *self, unsigned long cmd,	void *v)
  {
  	int i;
-@@ -729,6 +743,12 @@ static int gic_notifier(struct notifier_
+@@ -730,6 +744,12 @@ static int gic_notifier(struct notifier_
  		}
  	}
  

@@ -1,6 +1,6 @@
 --- a/arch/arm/Kconfig.debug
 +++ b/arch/arm/Kconfig.debug
-@@ -1470,6 +1470,13 @@ choice
+@@ -1400,6 +1400,13 @@ choice
  		  options; the platform specific options are deprecated
  		  and will be soon removed.
  
