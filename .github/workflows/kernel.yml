@@ -3,13 +3,12 @@ name: Build Alpine Generic
 on:
   workflow_dispatch:
   push:
+    branches:
+      - r9000-xr700-main
     paths:
       - 'package/kernel/**'
       - 'target/linux/alpine/**'
-    paths-ignore:
-      - 'package/lang/python/**'
-    branches:
-      - r9000-xr700-main
+      - '!package/lang/python/**'
 jobs:
   build:
     name: Build linux/alpine/generic
