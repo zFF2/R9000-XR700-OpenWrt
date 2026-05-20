@@ -10,9 +10,7 @@ on:
     paths:
       - 'package/kernel/**'
       - 'target/linux/alpine/**'
-
-    paths-ignore:
-      - 'package/lang/python/**'
+      - '!package/lang/python/**'
 
 permissions:
   contents: write
