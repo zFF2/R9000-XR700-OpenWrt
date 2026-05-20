@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - 'package/kernel/**'
-      - 'target/linux/alpine/**'
+      - 'package/kernel/*'
+      - 'target/linux/alpine/*'
     branches:
       - r9000-xr700-main
 
