@@ -8,7 +8,6 @@ on:
     paths:
       - 'package/kernel/**'
       - 'target/linux/alpine/**'
-      - '!package/lang/python/**'
 jobs:
   build:
     name: Build linux/alpine/generic
