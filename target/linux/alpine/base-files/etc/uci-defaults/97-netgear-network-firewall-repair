@@ -1,0 +1,228 @@
+#!/bin/sh
+
+. /lib/functions/system.sh
+
+case "$(board_name)" in
+netgear,r9000|netgear,xr700|r9000|xr700)
+	;;
+*)
+	exit 0
+	;;
+esac
+
+apply_switch_config() {
+	local switch try
+
+	[ -x /sbin/swconfig ] || return 0
+
+	for switch in switch0 switch1; do
+		try=0
+		while [ "$try" -lt 3 ]; do
+			swconfig dev "$switch" load network >/dev/null 2>&1 && break
+			try=$((try + 1))
+			sleep 1
+		done
+
+		[ "$try" -lt 3 ] || logger -t netgear-network "failed to apply $switch swconfig" 2>/dev/null || true
+	done
+}
+
+generate_ula_prefix() {
+	hexdump -vn 5 -e '"fd" 1/1 "%02x:" 2/2 "%x:"' /dev/urandom
+	echo ":/48"
+}
+
+generate_dhcp_default_duid() {
+	printf '%s%s\n' '0004' "$(cat /proc/sys/kernel/random/uuid | sed -e 's/-//g')"
+}
+
+list_has_value() {
+	local section="$1"
+	local option="$2"
+	local expected="$3"
+	local value
+
+	for value in $(uci -q get "network.$section.$option"); do
+		[ "$value" = "$expected" ] && return 0
+	done
+
+	return 1
+}
+
+network_needs_repair() {
+	[ "$(uci -q get network.lan.device)" = "br-lan" ] || return 0
+	[ "$(uci -q get network.lan.proto)" = "static" ] || return 0
+	[ "$(uci -q get network.lan_dev.name)" = "br-lan" ] || return 0
+	[ "$(uci -q get network.lan_dev.type)" = "bridge" ] || return 0
+	list_has_value lan_dev ports "eth1" || return 0
+	[ "$(uci -q get network.wan.device)" = "eth2.2" ] || return 0
+	[ "$(uci -q get network.wan.proto)" = "dhcp" ] || return 0
+	[ "$(uci -q get network.wan6.device)" = "eth2.2" ] || return 0
+	[ "$(uci -q get network.wan6.proto)" = "dhcpv6" ] || return 0
+	[ "$(uci -q get network.switch0_vlan1.ports)" = "0 1 2 4 6" ] || return 0
+	[ "$(uci -q get network.switch0_vlan2.ports)" = "3 5t" ] || return 0
+	[ "$(uci -q get network.switch1_vlan1.ports)" = "6 0 1 2 4 5" ] || return 0
+	[ "$(uci -q get network.switch1_vlan2.ports)" = "3 5t" ] || return 0
+
+	return 1
+}
+
+repair_network() {
+	local ula_prefix dhcp_default_duid
+
+	ula_prefix="$(uci -q get network.globals.ula_prefix)"
+	[ -n "$ula_prefix" ] && [ "$ula_prefix" != "auto" ] || ula_prefix="$(generate_ula_prefix)"
+
+	dhcp_default_duid="$(uci -q get network.globals.dhcp_default_duid)"
+	[ -n "$dhcp_default_duid" ] && [ "$dhcp_default_duid" != "auto" ] || dhcp_default_duid="$(generate_dhcp_default_duid)"
+
+	while uci -q delete network.@device[0]; do :; done
+	while uci -q delete network.@switch[0]; do :; done
+	while uci -q delete network.@switch_vlan[0]; do :; done
+	while uci -q delete network.@switch_port[0]; do :; done
+
+	uci -q batch <<-EOF
+		delete network.loopback
+		set network.loopback='interface'
+		set network.loopback.device='lo'
+		set network.loopback.proto='static'
+		add_list network.loopback.ipaddr='127.0.0.1/8'
+
+		delete network.globals
+		set network.globals='globals'
+		set network.globals.dhcp_default_duid='$dhcp_default_duid'
+		set network.globals.ula_prefix='$ula_prefix'
+
+		delete network.lan_dev
+		set network.lan_dev='device'
+		set network.lan_dev.name='br-lan'
+		set network.lan_dev.type='bridge'
+		add_list network.lan_dev.ports='eth1'
+
+		delete network.lan
+		set network.lan='interface'
+		set network.lan.device='br-lan'
+		set network.lan.proto='static'
+		add_list network.lan.ipaddr='10.0.0.1/24'
+		set network.lan.ip6assign='60'
+
+		delete network.wan
+		set network.wan='interface'
+		set network.wan.device='eth2.2'
+		set network.wan.proto='dhcp'
+
+		delete network.wan6
+		set network.wan6='interface'
+		set network.wan6.device='eth2.2'
+		set network.wan6.proto='dhcpv6'
+
+		delete network.switch0
+		set network.switch0='switch'
+		set network.switch0.name='switch0'
+		set network.switch0.reset='1'
+		set network.switch0.enable_vlan='1'
+
+		delete network.switch0_vlan1
+		set network.switch0_vlan1='switch_vlan'
+		set network.switch0_vlan1.device='switch0'
+		set network.switch0_vlan1.vlan='1'
+		set network.switch0_vlan1.ports='0 1 2 4 6'
+
+		delete network.switch0_vlan2
+		set network.switch0_vlan2='switch_vlan'
+		set network.switch0_vlan2.device='switch0'
+		set network.switch0_vlan2.vlan='2'
+		set network.switch0_vlan2.ports='3 5t'
+
+		delete network.switch1
+		set network.switch1='switch'
+		set network.switch1.name='switch1'
+		set network.switch1.reset='1'
+		set network.switch1.enable_vlan='1'
+
+		delete network.switch1_vlan1
+		set network.switch1_vlan1='switch_vlan'
+		set network.switch1_vlan1.device='switch1'
+		set network.switch1_vlan1.vlan='1'
+		set network.switch1_vlan1.ports='6 0 1 2 4 5'
+
+		delete network.switch1_vlan2
+		set network.switch1_vlan2='switch_vlan'
+		set network.switch1_vlan2.device='switch1'
+		set network.switch1_vlan2.vlan='2'
+		set network.switch1_vlan2.ports='3 5t'
+
+		commit network
+	EOF
+}
+
+ensure_firewall_section() {
+	local type="$1"
+	local index="$2"
+
+	while [ "$(uci -q get "firewall.@$type[$index]")" != "$type" ]; do
+		uci -q add firewall "$type" >/dev/null || return 1
+	done
+
+	return 0
+}
+
+repair_firewall() {
+	ensure_firewall_section defaults 0 || return 1
+	ensure_firewall_section zone 0 || return 1
+	ensure_firewall_section zone 1 || return 1
+	ensure_firewall_section forwarding 0 || return 1
+
+	uci -q batch <<-EOF
+		set firewall.@defaults[0].synflood_protect='1'
+		set firewall.@defaults[0].input='REJECT'
+		set firewall.@defaults[0].output='ACCEPT'
+		set firewall.@defaults[0].forward='REJECT'
+
+		set firewall.@zone[0].name='lan'
+		delete firewall.@zone[0].network
+		add_list firewall.@zone[0].network='lan'
+		set firewall.@zone[0].input='ACCEPT'
+		set firewall.@zone[0].output='ACCEPT'
+		set firewall.@zone[0].forward='ACCEPT'
+
+		set firewall.@zone[1].name='wan'
+		delete firewall.@zone[1].network
+		add_list firewall.@zone[1].network='wan'
+		add_list firewall.@zone[1].network='wan6'
+		set firewall.@zone[1].input='REJECT'
+		set firewall.@zone[1].output='ACCEPT'
+		set firewall.@zone[1].forward='REJECT'
+		set firewall.@zone[1].masq='1'
+		set firewall.@zone[1].mtu_fix='1'
+
+		set firewall.@forwarding[0].src='lan'
+		set firewall.@forwarding[0].dest='wan'
+
+		delete firewall.allow_ssh_lan
+		set firewall.allow_ssh_lan='rule'
+		set firewall.allow_ssh_lan.name='Allow-SSH-LAN'
+		set firewall.allow_ssh_lan.src='lan'
+		set firewall.allow_ssh_lan.dest_port='22'
+		set firewall.allow_ssh_lan.proto='tcp'
+		set firewall.allow_ssh_lan.target='ACCEPT'
+
+		commit firewall
+	EOF
+}
+
+repair_smartdns() {
+	[ "$(uci -q get smartdns.@smartdns[0].enabled)" = "1" ] || return 0
+	[ "$(uci -q get smartdns.@smartdns[0].bind_device)" = "1" ] || return 0
+
+	# Binding to br-lan can race before the bridge exists and leaves DNS dead.
+	uci -q set smartdns.@smartdns[0].bind_device='0'
+	uci -q commit smartdns
+}
+
+network_needs_repair && repair_network
+apply_switch_config
+repair_firewall
+repair_smartdns
+
+exit 0
