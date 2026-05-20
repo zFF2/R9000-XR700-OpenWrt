@@ -16,5 +16,7 @@ permissions:
 
 jobs:
   build:
+    paths-ignore:
+      - 'package/lang/python/*'
     name: Build linux/alpine/generic
     uses: openwrt/actions-shared-workflows/.github/workflows/kernel.yml@main
