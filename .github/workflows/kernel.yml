@@ -1,15 +1,19 @@
 name: Build Alpine Generic
+
 on:
   workflow_dispatch:
+
   push:
-    paths:
-      - 'package/kernel/*'
-      - 'target/linux/alpine/*'
     branches:
       - r9000-xr700-main
+
+    paths:
+      - 'package/kernel/**'
+      - 'target/linux/alpine/**'
+
     paths-ignore:
-      - 'package/lang/python/*'
-      
+      - 'package/lang/python/**'
+
 permissions:
   contents: write
   packages: write
@@ -18,4 +22,8 @@ permissions:
 jobs:
   build:
     name: Build linux/alpine/generic
+
     uses: openwrt/actions-shared-workflows/.github/workflows/kernel.yml@main
+
+    with:
+      targets: linux/alpine/generic
