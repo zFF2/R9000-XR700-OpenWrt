@@ -47,17 +47,8 @@ define Package/geomate/postinst
 
 if [ -x /etc/init.d/geomate ]; then
 	/etc/init.d/geomate start || true
-
-	sleep 5
-	i=0
-	while [ -f "/tmp/geomate_loading" ] && [ "$$i" -lt 60 ]; do
-		sleep 2
-		i=$$((i + 1))
-	done
-
-	/etc/init.d/geomate stop || true
-	/etc/init.d/geomate disable || true
-	uci -q set geomate.global.enabled='0' || true
+	/etc/init.d/geomate enable || true
+	uci -q set geomate.global.enabled='1' || true
 	uci -q commit geomate || true
 fi
 exit 0
