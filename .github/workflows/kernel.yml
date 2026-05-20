@@ -6,8 +6,6 @@ on:
     paths:
       - 'package/kernel/*'
       - 'target/linux/alpine/*'
-    paths-ignore:
-      - 'package/lang/python/*'
     branches:
       - r9000-xr700-main
 
@@ -18,5 +16,7 @@ permissions:
 
 jobs:
   build:
+    paths-ignore:
+      - 'package/lang/python/*'
     name: Build linux/alpine/generic
     uses: openwrt/actions-shared-workflows/.github/workflows/kernel.yml@main
