@@ -6,3 +6,9 @@
 [submodule "package/luci/package/luci/luci-app-alpha-config"]
 	path = package/luci/package/luci/luci-app-alpha-config
 	url = https://github.com/animegasan/luci-app-alpha-config.git
+[submodule "package/luci/luci-app-alpha-config"]
+	path = package/luci/luci-app-alpha-config
+	url = https://github.com/animegasan/luci-app-alpha-config.git
+[submodule "package/luci/luci-theme-alpha"]
+	path = package/luci/luci-theme-alpha
+	url = https://github.com/derisamedia/luci-theme-alpha.git
