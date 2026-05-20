@@ -16,10 +16,13 @@ set system.sfp_led='led'
 set system.sfp_led.name='SFP'
 set system.sfp_led.sysfs='white:sfp'
 set system.sfp_led.trigger='netdev'
+set system.sfp_led.default='0'
 set system.sfp_led.dev='eth0'
-set system.sfp_led.mode='link'
-add_list system.sfp_led.mode='tx'
-add_list system.sfp_led.mode='rx'
+
+# light up only if 10G link is on (as the led is labeled "10G")
+uci add_list system.sfp_led.mode='link_10000'
+uci add_list system.sfp_led.mode='tx'
+uci add_list system.sfp_led.mode='rx'
 EOF
 
 uci commit system
