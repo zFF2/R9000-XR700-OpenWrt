@@ -54,7 +54,7 @@
 				compatible = "qca,ar7100-usb-phy";
 				reg = <0x18030000 0x10>;
 
-				reset-names = "usb-phy", "usb-host", "usb-ohci-dll";
+				reset-names = "phy", "host", "usb-ohci-dll";
 				resets = <&rst 4>, <&rst 5>, <&rst 6>;
 
 				#phy-cells = <0>;
@@ -147,7 +147,7 @@
 		interrupt-parent = <&cpuintc>;
 		interrupts = <3>;
 
-		phy-names = "usb-phy";
+		phy-names = "usb";
 		phys = <&usb_phy>;
 
 		has-synopsys-hc-bug;
@@ -170,7 +170,7 @@
 		interrupt-parent = <&miscintc>;
 		interrupts = <6>;
 
-		phy-names = "usb-phy";
+		phy-names = "usb";
 		phys = <&usb_phy>;
 
 		status = "disabled";
@@ -210,8 +210,7 @@
 
 &eth0 {
 	compatible = "qca,ar7100-eth", "syscon";
-	reg = <0x19000000 0x200
-		0x18070000 0x4>;
+	reg = <0x19000000 0x200>, <0x18070000 0x4>;
 
 	pll-data = <0x00110000 0x00001099 0x00991099>;
 	pll-reg = <0x4 0x10 17>;
@@ -229,8 +228,7 @@
 
 &eth1 {
 	compatible = "qca,ar7100-eth", "syscon";
-	reg = <0x1a000000 0x200
-		0x18070004 0x4>;
+	reg = <0x1a000000 0x200>, <0x18070004 0x4>;
 
 	pll-data = <0x00110000 0x00001099 0x00991099>;
 	pll-reg = <0x4 0x14 19>;

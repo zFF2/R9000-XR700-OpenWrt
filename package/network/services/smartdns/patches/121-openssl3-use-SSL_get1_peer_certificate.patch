@@ -1,0 +1,11 @@
+--- a/src/dns_client/client_tls.c
++++ b/src/dns_client/client_tls.c
+@@ -881,7 +881,7 @@ static int _dns_client_tls_verify(struct dns_server_info *server_info)
+ 	}
+ 
+ 	pthread_mutex_lock(&server_info->lock);
+-	cert = SSL_get_peer_certificate(server_info->ssl);
++	cert = SSL_get1_peer_certificate(server_info->ssl);
+ 	if (cert == NULL) {
+ 		pthread_mutex_unlock(&server_info->lock);
+ 		tlog(TLOG_ERROR, "get peer certificate failed.");

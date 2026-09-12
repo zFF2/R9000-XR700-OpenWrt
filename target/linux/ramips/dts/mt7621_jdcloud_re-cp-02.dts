@@ -81,9 +81,12 @@
 			};
 
 			partition@40000 {
-				compatible = "u-boot,env";
 				label = "Config";
 				reg = <0x40000 0x10000>;
+
+				nvmem-layout {
+					compatible = "u-boot,env";
+				};
 			};
 
 			partition@50000 {
@@ -179,6 +182,10 @@
 			label = "lan3";
 		};
 	};
+};
+
+&usb_phy {
+	status = "disabled";
 };
 
 &xhci {

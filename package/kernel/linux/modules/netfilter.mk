@@ -51,10 +51,32 @@ endef
 
 $(eval $(call KernelPackage,nf-conncount))
 
+
+define KernelPackage/iptables
+  SUBMENU:=$(NF_MENU)
+  TITLE:=Iptables legacy
+  KCONFIG:= \
+	CONFIG_IP_NF_IPTABLES_LEGACY \
+	CONFIG_NETFILTER_XTABLES \
+	CONFIG_NETFILTER_XTABLES_LEGACY=y \
+	CONFIG_IP6_NF_IPTABLES_LEGACY \
+	CONFIG_BRIDGE_NF_EBTABLES_LEGACY
+  HIDDEN:=1
+  DEPENDS:=@!LINUX_6_12
+  FILES:= \
+	$(LINUX_DIR)/net/ipv4/netfilter/ip_tables.ko \
+	$(LINUX_DIR)/net/netfilter/x_tables.ko
+  AUTOLOAD:=$(call AutoProbe,$(notdir ip_tables x_tables))
+endef
+
+$(eval $(call KernelPackage,iptables))
+
+
 define KernelPackage/nf-ipt
   SUBMENU:=$(NF_MENU)
   TITLE:=Iptables core
   KCONFIG:=$(KCONFIG_NF_IPT)
+  DEPENDS:=+!LINUX_6_12:kmod-iptables
   FILES:=$(foreach mod,$(NF_IPT-m),$(LINUX_DIR)/net/$(mod).ko)
   AUTOLOAD:=$(call AutoProbe,$(notdir $(NF_IPT-m)))
 endef
@@ -120,23 +142,11 @@ endef
 $(eval $(call KernelPackage,nf-conntrack))
 
 
-define KernelPackage/nf-conntrack6
-  SUBMENU:=$(NF_MENU)
-  TITLE:=Netfilter IPv6 connection tracking
-  KCONFIG:=$(KCONFIG_NF_CONNTRACK6)
-  DEPENDS:=@IPV6 +kmod-nf-conntrack
-  FILES:=$(foreach mod,$(NF_CONNTRACK6-m),$(LINUX_DIR)/net/$(mod).ko)
-  AUTOLOAD:=$(call AutoProbe,$(notdir $(NF_CONNTRACK6-m)))
-endef
-
-$(eval $(call KernelPackage,nf-conntrack6))
-
-
 define KernelPackage/nf-dup-inet
   SUBMENU:=$(NF_MENU)
   TITLE:=Netfilter nf_tables dup in ip/ip6/inet family support
   HIDDEN:=1
-  DEPENDS:=+kmod-nf-conntrack +IPV6:kmod-nf-conntrack6
+  DEPENDS:=+kmod-nf-conntrack
   KCONFIG:= \
 	CONFIG_NF_DUP_IPV4 \
 	CONFIG_NF_DUP_IPV6
@@ -187,7 +197,7 @@ define KernelPackage/nf-nat6
   SUBMENU:=$(NF_MENU)
   TITLE:=Netfilter IPV6-NAT
   KCONFIG:=$(KCONFIG_NF_NAT6)
-  DEPENDS:=@IPV6 +kmod-nf-conntrack6 +kmod-nf-nat
+  DEPENDS:=@IPV6 +kmod-nf-nat
   FILES:=$(foreach mod,$(NF_NAT6-m),$(LINUX_DIR)/net/$(mod).ko)
   AUTOLOAD:=$(call AutoProbe,$(notdir $(NF_NAT6-m)))
 endef
@@ -1048,6 +1058,40 @@ endef
 $(eval $(call KernelPackage,nfnetlink-queue))
 
 
+define KernelPackage/nfnetlink-cthelper
+  TITLE:=Netfilter User space conntrack helpers
+  FILES:=$(LINUX_DIR)/net/netfilter/nfnetlink_cthelper.ko
+  KCONFIG:=CONFIG_NF_CT_NETLINK_HELPER
+  AUTOLOAD:=$(call AutoProbe,nfnetlink_cthelper)
+  $(call AddDepends/nfnetlink,+kmod-nfnetlink-queue +kmod-nf-conntrack-netlink)
+endef
+
+define KernelPackage/nfnetlink-cthelper/description
+ Kernel modules support for a netlink-based connection tracking
+ userspace helpers interface
+endef
+
+$(eval $(call KernelPackage,nfnetlink-cthelper))
+
+
+define KernelPackage/nfnetlink-cttimeout
+  TITLE:=Netfilter conntrack expectation timeout
+  FILES:=$(LINUX_DIR)/net/netfilter/nfnetlink_cttimeout.ko
+  KCONFIG:=CONFIG_NF_CT_NETLINK_TIMEOUT
+  AUTOLOAD:=$(call AutoProbe,nfnetlink_cttimeout)
+  $(call AddDepends/nfnetlink,+kmod-nf-conntrack @KERNEL_NF_CONNTRACK_TIMEOUT)
+endef
+
+define KernelPackage/nfnetlink-cttimeout/description
+ Kernel modules support for a netlink-based connection tracking
+ userspace timeout interface
+
+ Requires CONFIG_NF_CONNTRACK_TIMEOUT (only enabled for non-small flash devices)
+endef
+
+$(eval $(call KernelPackage,nfnetlink-cttimeout))
+
+
 define KernelPackage/nf-conntrack-netlink
   TITLE:=Connection tracking netlink interface
   FILES:=$(LINUX_DIR)/net/netfilter/nf_conntrack_netlink.ko
@@ -1101,7 +1145,7 @@ $(eval $(call KernelPackage,ipt-rpfilter))
 define KernelPackage/nft-core
   SUBMENU:=$(NF_MENU)
   TITLE:=Netfilter nf_tables support
-  DEPENDS:=+kmod-nfnetlink +kmod-nf-reject +IPV6:kmod-nf-reject6 +IPV6:kmod-nf-conntrack6 +kmod-nf-nat +kmod-nf-log +IPV6:kmod-nf-log6 +kmod-lib-crc32c
+  DEPENDS:=+kmod-nfnetlink +kmod-nf-reject +IPV6:kmod-nf-reject6 +kmod-nf-nat +kmod-nf-log +IPV6:kmod-nf-log6 +kmod-lib-crc32c
   FILES:=$(foreach mod,$(NFT_CORE-m),$(LINUX_DIR)/net/$(mod).ko)
   AUTOLOAD:=$(call AutoProbe,$(notdir $(NFT_CORE-m)))
   KCONFIG:= \

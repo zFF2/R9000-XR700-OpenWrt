@@ -1,0 +1,111 @@
+--- a/src/utils/ssl.c
++++ b/src/utils/ssl.c
+@@ -23,6 +23,7 @@
+ #include <ifaddrs.h>
+ #include <linux/limits.h>
+ #include <openssl/crypto.h>
++#include <openssl/rsa.h>
+ #include <openssl/ssl.h>
+ #include <openssl/x509v3.h>
+ #include <pthread.h>
+@@ -63,20 +64,22 @@
+ 		goto out;
+ 	}
+ 
+-	if (X509_get_notAfter(cert) == NULL) {
++	const ASN1_TIME *not_after = X509_getm_notAfter(cert);
++	if (not_after == NULL) {
+ 		goto out;
+ 	}
+ 
+-	if (X509_get_notBefore(cert) == NULL) {
++	const ASN1_TIME *not_before = X509_getm_notBefore(cert);
++	if (not_before == NULL) {
+ 		goto out;
+ 	}
+ 
+-	if (X509_cmp_current_time(X509_get_notAfter(cert)) < 0) {
++	if (X509_cmp_current_time(not_after) < 0) {
+ 		tlog(TLOG_WARN, "cert %s expired", cert_file_path);
+ 		goto out;
+ 	}
+ 
+-	if (X509_cmp_current_time(X509_get_notBefore(cert)) > 0) {
++	if (X509_cmp_current_time(not_before) > 0) {
+ 		tlog(TLOG_WARN, "cert %s not valid yet", cert_file_path);
+ 		goto out;
+ 	}
+@@ -299,9 +302,26 @@
+ 
+ 	const int RSA_KEY_LENGTH = 2048;
+ #if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
+-	ctx->pkey = EVP_RSA_gen(RSA_KEY_LENGTH);
++	EVP_PKEY_CTX *pctx = NULL;
++
++	pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
++	if (pctx == NULL) {
++		goto errout;
++	}
++
++	if (EVP_PKEY_keygen_init(pctx) <= 0 ||
++		EVP_PKEY_CTX_set_rsa_keygen_bits(pctx, RSA_KEY_LENGTH) <= 0 ||
++		EVP_PKEY_keygen(pctx, &ctx->pkey) <= 0) {
++		EVP_PKEY_CTX_free(pctx);
++		goto errout;
++	}
++
++	EVP_PKEY_CTX_free(pctx);
+ #else
+ 	ctx->pkey = EVP_PKEY_new();
++	if (ctx->pkey == NULL) {
++		goto errout;
++	}
+ 	ctx->rsa = RSA_new();
+ 	ctx->bn = BN_new();
+ 
+@@ -309,7 +329,18 @@
+ 	RSA_generate_key_ex(ctx->rsa, RSA_KEY_LENGTH, ctx->bn, NULL);
+ 	EVP_PKEY_assign_RSA(ctx->pkey, ctx->rsa);
+ #endif
++
++	if (ctx->pkey == NULL) {
++		goto errout;
++	}
++
+ 	return ctx;
++
++errout:
++	if (ctx) {
++		_free_key(ctx);
++	}
++	return NULL;
+ }
+ 
+ static X509 *_generate_smartdns_cert(EVP_PKEY *pkey, X509 *issuer_cert, EVP_PKEY *issuer_key, const char *san, int days)
+@@ -333,8 +364,8 @@
+ 
+ 	X509_set_version(cert, 2);
+ 	ASN1_INTEGER_set(X509_get_serialNumber(cert), rand());
+-	X509_gmtime_adj(X509_get_notBefore(cert), 0);
+-	X509_gmtime_adj(X509_get_notAfter(cert), days * 24 * 3600);
++	X509_gmtime_adj(X509_getm_notBefore(cert), 0);
++	X509_gmtime_adj(X509_getm_notAfter(cert), days * 24 * 3600);
+ 
+ 	X509_set_pubkey(cert, pkey);
+ 
+@@ -536,7 +567,7 @@
+ 	return -1;
+ }
+ 
+-#if OPENSSL_API_COMPAT < 0x10100000
++#if OPENSSL_VERSION_NUMBER < 0x10100000L
+ #define THREAD_STACK_SIZE (16 * 1024)
+ static pthread_mutex_t *lock_cs;
+ static long *lock_count;
+@@ -741,4 +772,4 @@
+ #else
+ 	return 0;
+ #endif
+-}
+\ No newline at end of file
++}

@@ -5,13 +5,13 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=firewall4
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL=$(PROJECT_GIT)/project/firewall4.git
-PKG_SOURCE_DATE:=2024-05-21
-PKG_SOURCE_VERSION:=4c01d1ebf99e8ecfa69758a9b4f450ecef7b93cd
-PKG_MIRROR_HASH:=bbc5622bc03e3b43116fcc86e3fa2d2372bfc07b3a00d2b3a6efac4f7454a403
+PKG_SOURCE_DATE:=2025-03-17
+PKG_SOURCE_VERSION:=b6e5157527d361f99ad52eaa6da273cb0f2dfd59
+PKG_MIRROR_HASH:=fb563b493411922a8fbddf6a5a6766cffa47f87621e056b8dcf38309091835eb
 PKG_MAINTAINER:=Jo-Philipp Wich <jo@mein.io>
 PKG_LICENSE:=ISC
 
@@ -28,6 +28,7 @@ define Package/firewall4
 	+ucode +ucode-mod-fs +ucode-mod-ubus +ucode-mod-uci
   EXTRA_DEPENDS:=ucode (>=2022.03.22)
   PROVIDES:=uci-firewall
+  DEFAULT_VARIANT:=1
 endef
 
 define Package/firewall4/description

@@ -1,0 +1,120 @@
+--- a/system-linux.c
++++ b/system-linux.c
+@@ -2192,6 +2192,7 @@
+ 
+ 	data->valid = true;
+ 
++#ifdef ETHTOOL_A_C33_PSE_ADMIN_STATE
+ 	if (tb[ETHTOOL_A_C33_PSE_ADMIN_STATE])
+ 		data->c33_admin_state = nla_get_u32(tb[ETHTOOL_A_C33_PSE_ADMIN_STATE]);
+ 	if (tb[ETHTOOL_A_C33_PSE_PW_D_STATUS])
+@@ -2202,14 +2203,19 @@
+ 		data->c33_actual_pw = nla_get_u32(tb[ETHTOOL_A_C33_PSE_ACTUAL_PW]);
+ 	if (tb[ETHTOOL_A_C33_PSE_AVAIL_PW_LIMIT])
+ 		data->c33_avail_pw_limit = nla_get_u32(tb[ETHTOOL_A_C33_PSE_AVAIL_PW_LIMIT]);
++#endif
+ 	if (tb[ETHTOOL_A_PODL_PSE_ADMIN_STATE])
+ 		data->podl_admin_state = nla_get_u32(tb[ETHTOOL_A_PODL_PSE_ADMIN_STATE]);
+ 	if (tb[ETHTOOL_A_PODL_PSE_PW_D_STATUS])
+ 		data->podl_pw_status = nla_get_u32(tb[ETHTOOL_A_PODL_PSE_PW_D_STATUS]);
++#ifdef ETHTOOL_A_PSE_PRIO_MAX
+ 	if (tb[ETHTOOL_A_PSE_PRIO_MAX])
+ 		data->pse_prio_max = nla_get_u32(tb[ETHTOOL_A_PSE_PRIO_MAX]);
++#endif
++#ifdef ETHTOOL_A_PSE_PRIO
+ 	if (tb[ETHTOOL_A_PSE_PRIO])
+ 		data->pse_prio = nla_get_u32(tb[ETHTOOL_A_PSE_PRIO]);
++#endif
+ 
+ 	return NL_OK;
+ }
+@@ -2377,21 +2383,27 @@
+ 	nla_put_string(msg, ETHTOOL_A_HEADER_DEV_NAME, dev->ifname);
+ 	nla_nest_end(msg, hdr);
+ 
++#ifdef ETHTOOL_A_C33_PSE_ADMIN_CONTROL
+ 	if (s->flags & DEV_OPT_PSE)
+ 		nla_put_u32(msg, ETHTOOL_A_C33_PSE_ADMIN_CONTROL,
+ 			    s->pse ? ETHTOOL_C33_PSE_ADMIN_STATE_ENABLED :
+ 				     ETHTOOL_C33_PSE_ADMIN_STATE_DISABLED);
++#endif
+ 
+ 	if (s->flags & DEV_OPT_PSE_PODL)
+ 		nla_put_u32(msg, ETHTOOL_A_PODL_PSE_ADMIN_CONTROL,
+ 			    s->pse_podl ? ETHTOOL_PODL_PSE_ADMIN_STATE_ENABLED :
+ 					  ETHTOOL_PODL_PSE_ADMIN_STATE_DISABLED);
+ 
++#ifdef ETHTOOL_A_C33_PSE_AVAIL_PW_LIMIT
+ 	if (s->flags & DEV_OPT_PSE_POWER_LIMIT)
+ 		nla_put_u32(msg, ETHTOOL_A_C33_PSE_AVAIL_PW_LIMIT, s->pse_power_limit);
++#endif
+ 
++#ifdef ETHTOOL_A_PSE_PRIO
+ 	if (s->flags & DEV_OPT_PSE_PRIORITY)
+ 		nla_put_u32(msg, ETHTOOL_A_PSE_PRIO, s->pse_priority);
++#endif
+ 
+ 	cb_data.pending = 1;
+ 	cb_data.err = 0;
+@@ -3509,24 +3521,27 @@
+ 			void *pse_tbl = blobmsg_open_table(b, "pse");
+ 
+ 			/* C33 (Clause 33 PoE) status */
+-			if (pse_data.c33_admin_state) {
+-				const char *state = "unknown";
+-				switch (pse_data.c33_admin_state) {
+-				case ETHTOOL_C33_PSE_ADMIN_STATE_DISABLED:
+-					state = "disabled";
+-					break;
+-				case ETHTOOL_C33_PSE_ADMIN_STATE_ENABLED:
+-					state = "enabled";
++				if (pse_data.c33_admin_state) {
++					const char *state = "unknown";
++#ifdef ETHTOOL_C33_PSE_ADMIN_STATE_DISABLED
++					switch (pse_data.c33_admin_state) {
++					case ETHTOOL_C33_PSE_ADMIN_STATE_DISABLED:
++						state = "disabled";
+ 					break;
++					case ETHTOOL_C33_PSE_ADMIN_STATE_ENABLED:
++						state = "enabled";
++						break;
++					}
++#endif
++					blobmsg_add_string(b, "c33-admin-state", state);
+ 				}
+-				blobmsg_add_string(b, "c33-admin-state", state);
+-			}
+ 
+-			if (pse_data.c33_pw_status) {
+-				const char *status = "unknown";
+-				switch (pse_data.c33_pw_status) {
+-				case ETHTOOL_C33_PSE_PW_D_STATUS_DISABLED:
+-					status = "disabled";
++				if (pse_data.c33_pw_status) {
++					const char *status = "unknown";
++#ifdef ETHTOOL_C33_PSE_PW_D_STATUS_DISABLED
++					switch (pse_data.c33_pw_status) {
++					case ETHTOOL_C33_PSE_PW_D_STATUS_DISABLED:
++						status = "disabled";
+ 					break;
+ 				case ETHTOOL_C33_PSE_PW_D_STATUS_SEARCHING:
+ 					status = "searching";
+@@ -3540,12 +3555,13 @@
+ 				case ETHTOOL_C33_PSE_PW_D_STATUS_FAULT:
+ 					status = "fault";
+ 					break;
+-				case ETHTOOL_C33_PSE_PW_D_STATUS_OTHERFAULT:
+-					status = "otherfault";
+-					break;
++					case ETHTOOL_C33_PSE_PW_D_STATUS_OTHERFAULT:
++						status = "otherfault";
++						break;
++					}
++#endif
++					blobmsg_add_string(b, "c33-power-status", status);
+ 				}
+-				blobmsg_add_string(b, "c33-power-status", status);
+-			}
+ 
+ 			if (pse_data.c33_pw_class)
+ 				blobmsg_add_u32(b, "c33-power-class", pse_data.c33_pw_class);

@@ -25,7 +25,6 @@ ifeq ($(strip $(CONFIG_EXTERNAL_KERNEL_TREE)),"")
     define Kernel/Prepare/Default
 	$(LINUX_CAT) $(DL_DIR)/$(LINUX_SOURCE) | $(TAR) -C $(KERNEL_BUILD_DIR) $(TAR_OPTIONS)
 	$(Kernel/Patch)
-	$(if $(QUILT),touch $(LINUX_DIR)/.quilt_used)
     endef
   else
     define Kernel/Prepare/Default
@@ -175,7 +174,6 @@ define Kernel/PrepareConfigPerRootfs
 		[ ! -d "$(1)" ] || rm -rf $(1); \
 		mkdir $(1) && $(CP) -T $(LINUX_DIR) $(1); \
 		touch $(1)/.config; \
-		rm -rf $(1)/usr/initramfs_data.cpio*; \
 	}
 endef
 
@@ -190,6 +188,7 @@ define Kernel/CompileImage/Initramfs
 		$(call Kernel/Configure/Initramfs,$(if $(1),$(1),$(TARGET_DIR)),$(LINUX_DIR)$(2)); \
 		$(CP) $(GENERIC_PLATFORM_DIR)/other-files/init $(if $(1),$(1),$(TARGET_DIR))/init; \
 		$(if $(SOURCE_DATE_EPOCH),touch -hcd "@$(SOURCE_DATE_EPOCH)" $(if $(1),$(1),$(TARGET_DIR)) $(if $(1),$(1),$(TARGET_DIR))/init;) \
+		rm -rf $(LINUX_DIR)$(2)/usr/initramfs_data.cpio*; \
 		$(if $(CONFIG_TARGET_ROOTFS_INITRAMFS_SEPARATE), \
 			$(call locked,{ \
 				$(if $(call qstrip,$(CONFIG_EXTERNAL_CPIO)), \

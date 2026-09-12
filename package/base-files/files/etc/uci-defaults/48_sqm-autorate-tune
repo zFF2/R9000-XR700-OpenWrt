@@ -1,0 +1,57 @@
+#!/bin/sh
+
+# Configure sqm-autorate based on existing SQM settings, then enable the service.
+# Safe no-op if package/config is absent.
+
+[ -f /etc/config/sqm-autorate ] || exit 0
+
+# Use SQM queue[0] as source of truth when available.
+SQM_IF="$(uci -q get sqm.@queue[0].interface)"
+SQM_UL="$(uci -q get sqm.@queue[0].upload)"
+SQM_DL="$(uci -q get sqm.@queue[0].download)"
+
+[ -n "$SQM_IF" ] || SQM_IF="wan"
+
+case "$SQM_IF" in
+  ifb*|veth*)
+    DL_IF="$SQM_IF"
+    # Best effort fallback when SQM points at ingress virtual interface
+    UL_IF="wan"
+    ;;
+  *)
+    UL_IF="$SQM_IF"
+    DL_IF="ifb4$SQM_IF"
+    ;;
+esac
+
+# Conservative defaults if SQM doesn't already specify rates.
+# DOCSIS3.0 gigabit often has high DL and much lower UL.
+[ -n "$SQM_UL" ] && [ "$SQM_UL" -gt 0 ] 2>/dev/null || SQM_UL="45000"
+[ -n "$SQM_DL" ] && [ "$SQM_DL" -gt 0 ] 2>/dev/null || SQM_DL="940000"
+
+# Ensure optional sections exist before setting keys.
+uci -q get sqm-autorate.@advanced_settings[0] >/dev/null || uci -q add sqm-autorate advanced_settings >/dev/null
+
+uci -q batch <<EOT
+set sqm-autorate.@network[0].upload_interface='$UL_IF'
+set sqm-autorate.@network[0].download_interface='$DL_IF'
+set sqm-autorate.@network[0].upload_base_kbits='$SQM_UL'
+set sqm-autorate.@network[0].download_base_kbits='$SQM_DL'
+set sqm-autorate.@network[0].upload_min_percent='35'
+set sqm-autorate.@network[0].download_min_percent='35'
+set sqm-autorate.@advanced_settings[0].upload_delay_ms='12'
+set sqm-autorate.@advanced_settings[0].download_delay_ms='15'
+set sqm-autorate.@advanced_settings[0].high_load_level='0.80'
+set sqm-autorate.@output[0].log_level='WARN'
+set sqm-autorate.@output[0].use_syslog='1'
+set sqm-autorate.@output[0].suppress_statistics='yes'
+commit sqm-autorate
+EOT
+
+# Enable/start only when sqm-autorate init script exists.
+if [ -x /etc/init.d/sqm-autorate ]; then
+  /etc/init.d/sqm-autorate enable >/dev/null 2>&1
+  /etc/init.d/sqm-autorate restart >/dev/null 2>&1
+fi
+
+exit 0

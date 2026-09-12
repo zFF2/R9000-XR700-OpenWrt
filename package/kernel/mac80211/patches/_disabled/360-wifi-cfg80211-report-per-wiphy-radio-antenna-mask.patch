@@ -1,0 +1,64 @@
+From: Felix Fietkau <nbd@nbd.name>
+Date: Wed, 7 Aug 2024 13:31:07 +0200
+Subject: [PATCH] wifi: cfg80211: report per wiphy radio antenna mask
+
+With multi-radio devices, each radio typically gets a fixed set of antennas.
+In order to be able to disable specific antennas for some radios, user space
+needs to know which antenna mask bits are assigned to which radio.
+
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -5715,8 +5715,6 @@
+  * @iface_combinations: Valid interface combinations array, should not
+  *	list single interface types.
+  * @n_iface_combinations: number of entries in @iface_combinations array.
+- *
+- * @antenna_mask: bitmask of antennas connected to this radio.
+  */
+ struct wiphy_radio {
+ 	const struct wiphy_radio_freq_range *freq_range;
+@@ -5724,8 +5722,6 @@
+ 
+ 	const struct ieee80211_iface_combination *iface_combinations;
+ 	int n_iface_combinations;
+-
+-	u32 antenna_mask;
+ };
+ 
+ /**
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -8038,6 +8038,8 @@
+  * @__NL80211_IFTYPE_AKM_ATTR_LAST: Internal
+  * @NL80211_IFTYPE_AKM_ATTR_MAX: highest interface type AKM attribute.
+  */
++ * @NL80211_WIPHY_RADIO_ATTR_ANTENNA_MASK: bitmask (u32) of antennas
++ *	connected to this radio.
+ enum nl80211_iftype_akm_attributes {
+ 	__NL80211_IFTYPE_AKM_ATTR_INVALID,
+ 
+@@ -8048,6 +8050,7 @@
+ 	__NL80211_IFTYPE_AKM_ATTR_LAST,
+ 	NL80211_IFTYPE_AKM_ATTR_MAX = __NL80211_IFTYPE_AKM_ATTR_LAST - 1,
+ };
++	NL80211_WIPHY_RADIO_ATTR_ANTENNA_MASK,
+ 
+ /**
+  * enum nl80211_fils_discovery_attributes - FILS discovery configuration
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2539,6 +2539,11 @@
+ 			r->antenna_mask))
+ 		goto nla_put_failure;
+ 
++	if (r->antenna_mask &&
++	    nla_put_u32(msg, NL80211_WIPHY_RADIO_ATTR_ANTENNA_MASK,
++			r->antenna_mask))
++		goto nla_put_failure;
++
+ 	for (i = 0; i < r->n_freq_range; i++) {
+ 		const struct wiphy_radio_freq_range *range = &r->freq_range[i];
+ 
