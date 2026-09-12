@@ -36,3 +36,4 @@ git-src
 .ccache
 .vscode*
 /build.log
+/*_scripts
